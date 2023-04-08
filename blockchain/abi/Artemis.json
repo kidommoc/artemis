@@ -1,0 +1,189 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "msgAddr",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "setSubscribingPrice",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "dist",
+        "type": "address"
+      }
+    ],
+    "name": "getSubscribingPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "dist",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "months",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "pubKey",
+        "type": "string"
+      }
+    ],
+    "name": "subscribe",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function",
+    "payable": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subscriber",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "encKey",
+        "type": "string"
+      }
+    ],
+    "name": "admitSubscribing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "file",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "author",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireSubscribing",
+        "type": "bool"
+      }
+    ],
+    "name": "uploadArticle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "file",
+        "type": "string"
+      }
+    ],
+    "name": "removeArticle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "file",
+        "type": "string"
+      }
+    ],
+    "name": "getArticleInfo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "authorAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "author",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "requireSubscribing",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "file",
+        "type": "string"
+      }
+    ],
+    "name": "accessArticle",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "permission",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "encKey",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  }
+]
