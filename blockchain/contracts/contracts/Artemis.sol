@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "./ArtemisMessage.sol";
 
 contract Artemis {
-    event UploadArticleEvent(string fileAddr, string title, string author, address authorAddr, uint256 date);
+    event UploadArticleEvent(string fileAddr, string title, string author, address authorAddr, bool reqSubscribing, uint256 date);
     event RemoveArticleEvent(string fileAddr);
 
     struct Article {
@@ -95,7 +95,7 @@ contract Artemis {
         return _publs[publ].subscribers[msg.sender].time;
     }
 
-    function uploadArticle(string calldata file, string calldata title, string calldata author, bool requireSubscribing) public {
+    function uploadArticle(string calldata file, string calldata title, string calldata author, bool reqSubscribing) public {
         require(bytes(file).length != 0, "empty article location!");
         require(_articles[file].authorAddr == address(0), "article exists!");
         require(bytes(title).length != 0, "empty title!");
@@ -104,8 +104,8 @@ contract Artemis {
         _articles[file].author = author;
         _articles[file].authorAddr = msg.sender;
         _articles[file].date = block.timestamp;
-        _articles[file].requireSubscribing = requireSubscribing;
-        emit UploadArticleEvent(file, title, author, msg.sender, block.timestamp);
+        _articles[file].requireSubscribing = reqSubscribing;
+        emit UploadArticleEvent(file, title, author, msg.sender, reqSubscribing, block.timestamp);
     }
 
     function removeArticle(string calldata file) public {

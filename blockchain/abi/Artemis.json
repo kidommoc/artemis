@@ -52,6 +52,12 @@
       },
       {
         "indexed": false,
+        "internalType": "bool",
+        "name": "reqSubscribing",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "date",
         "type": "uint256"
@@ -208,7 +214,7 @@
       },
       {
         "internalType": "bool",
-        "name": "requireSubscribing",
+        "name": "reqSubscribing",
         "type": "bool"
       }
     ],
