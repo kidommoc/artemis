@@ -1,8 +1,8 @@
 {
   "name": "artemis",
-  "version": "0.01",
+  "version": "0.0.1",
   "description": "a blockchain-and-ipfs-based media distributing system",
-  "main": "./out/main/index.js",
+  "main": "./out/main/main.js",
   "author": "kidommoc",
   "homepage": "https://github.com/kidommoc/artemis",
   "scripts": {
@@ -24,13 +24,14 @@
     "@urql/core": "^4.0.4",
     "ethers": "^5.7.2",
     "ipfs-core": "^0.18.0",
+    "reflect-metadata": "^0.1.13",
     "typedi": "^0.10.0"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/jest": "^29.5.0",
-    "@types/node": "16.18.14",
+    "@types/node": "18.15.11",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vue/eslint-config-typescript": "^11.0.2",
     "electron": "^22.3.2",
