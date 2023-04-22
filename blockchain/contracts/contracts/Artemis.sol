@@ -67,7 +67,7 @@ contract Artemis {
         // being subscribing now?
         if (subInfo.time == 0 || subInfo.time < block.timestamp) {
             // no
-            _message.sendMessage(publ, 1, pubKey); // 1 means SUB_REQ
+            _message.sendMessage(msg.sender, publ, 1, pubKey); // 1 means SUB_REQ
             subInfo.requestTime = block.timestamp + months*30 days + 1 days;
             subInfo.payment = msg.value;
         }
@@ -82,7 +82,7 @@ contract Artemis {
         require(subscriber != address(0), "empty subscriber address!");
         require(bytes(encKey).length != 0, "empty Encryted AES Key!");
         SubscribeInfo storage info = _publs[msg.sender].subscribers[subscriber];
-        _message.sendMessage(subscriber, 2, "OK");
+        _message.sendMessage(msg.sender, subscriber, 2, "OK");
         info.encryptedAESKey = encKey;
         info.time = info.requestTime;
         payable(msg.sender).transfer(info.payment);
