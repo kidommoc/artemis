@@ -20,7 +20,7 @@ contract ArtemisMessage {
     }
 
     function hasMessage() public view returns (bool result) {
-        return _messages[msg.sender].length >= 0;
+        return _messages[msg.sender].length > 0;
     }
 
     function fetchMessage() public view
