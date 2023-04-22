@@ -2,11 +2,12 @@
   "name": "artemis",
   "version": "0.0.1",
   "description": "a blockchain-and-ipfs-based media distributing system",
-  "main": "./out/main/main.js",
+  "main": "./dist/main/main.js",
   "author": "kidommoc",
   "homepage": "https://github.com/kidommoc/artemis",
   "scripts": {
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix",
+    "generate-ts-config": "node generateTSConfig.js",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
