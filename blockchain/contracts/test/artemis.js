@@ -89,7 +89,7 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         assert.equal(result, web3.utils.toWei('0.2', 'ether'), 'subscribing price error')
     })
 
-    it('should upload a subscribing-requiring article by account0', async () => {
+    it('should upload a subscribing-required article by account0', async () => {
         const instA = await Artemis.deployed()
         const account0 = accounts[0]
         try {
@@ -129,7 +129,8 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const checkResult = await instM.hasMessage.call({ from: account0 })
         assert.equal(checkResult, true, 'check message error')
         const fetchResult = await instM.fetchMessage.call({ from: account0 })
-        assert.equal(fetchResult.msgTypes[0], 1, 'msg type error')
+        assert.equal(fetchResult.msgSenders[0], account1, 'msg sender error')
+        assert.equal(fetchResult.msgCodes[0], 1, 'msg type error')
         assert.equal(fetchResult.msgContents[0], 'TESTPUBKEY1', 'msg content error')
         try {
             await instM.clearMessage({ from: account0 })
@@ -161,7 +162,8 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const checkResult = await instM.hasMessage.call({ from: account1 })
         assert.equal(checkResult, true, 'check message error')
         const fetchResult = await instM.fetchMessage.call({ from: account1 })
-        assert.equal(fetchResult.msgTypes[0], 2, 'msg type error')
+        assert.equal(fetchResult.msgSenders[0], account0, 'msg sender error')
+        assert.equal(fetchResult.msgCodes[0], 2, 'msg type error')
         assert.equal(fetchResult.msgContents[0], 'OK', 'msg content error')
         try {
             const clearResult = await instM.clearMessage({ from: account1 })
