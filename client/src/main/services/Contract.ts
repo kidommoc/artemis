@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { Container, Service } from 'typedi'
+import { Service } from 'typedi'
 
 import { State } from '@/main/utils/State'
 const abiArtemis = require('@/main/abi/Artemis.json')
@@ -13,7 +13,6 @@ export enum MsgCode {
 
 @Service()
 export class ContractService {
-    private _state: State
 
     private _provider: ethers.providers.JsonRpcProvider
     private _wallet: ethers.Wallet | null
@@ -25,8 +24,7 @@ export class ContractService {
      * if account not specified, keeps related fields null
      * call updateService() once decided
      */
-    constructor () {
-        this._state = Container.get('State')
+    constructor (private _state: State) {
         this._provider = new ethers.providers.JsonRpcProvider(this._state.ethereumUrl)
         if (this._state.ethereumAddr == undefined) {
             this._wallet = null

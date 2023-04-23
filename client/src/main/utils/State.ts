@@ -78,7 +78,7 @@ export class State {
             return
         const addr = ethersUtils.computeAddress(accountKey)
         // generate asymmetic key-pair
-        const keyPair = CryptoUtils.generateAsymKey(accountKey)
+        const keyPair = CryptoUtils.generateAsymKey()
         let info: AccountInfo = {
             address: addr,
             accountKey: accountKey,
