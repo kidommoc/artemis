@@ -1,0 +1,75 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "code",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "content",
+        "type": "string"
+      }
+    ],
+    "name": "sendMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hasMessage",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "result",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "fetchMessage",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "msgSenders",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "msgCodes",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "msgContents",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "clearMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
