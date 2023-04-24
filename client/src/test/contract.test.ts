@@ -3,7 +3,7 @@ import { Container } from 'typedi'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as ethers from 'ethers'
-import { State } from '../main/utils/State'
+import { State } from '../main/State'
 import { ContractService, MsgCode as ContractMsgCode } from '../main/services/Contract'
 
 var state: State

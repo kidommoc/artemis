@@ -1,8 +1,7 @@
 // import * as fs from 'node:fs'
 import { utils as ethersUtils } from 'ethers'
 
-// import { CryptoUtils } from '@/main/utils/Crypto'
-import { CryptoUtils } from './Crypto'
+import * as utils from '@/main/utils'
 
 export type AsymmeticKey = { pub: string, pri: string }
 export type AccountInfo = { address: string, accountKey: string, asymKey: AsymmeticKey}
@@ -12,7 +11,7 @@ export class State {
     private _ethereumUrl: string
     private _ethereumInfos: AccountInfo[]
     private _ethereumAccountIndex: number
-    private _ipfsUrl: string
+    // private _ipfsUrl: string
 
     /* constructor
      * required: ipfs url, chain url and contract addrs,
@@ -22,7 +21,7 @@ export class State {
         this._ethereumContractArtemis = file.contractArtemis!
         this._ethereumContractMessage = file.contractMessage!
         this._ethereumUrl = file.ethereumUrl!
-        this._ipfsUrl = file.ipfsUrl!
+        // this._ipfsUrl = file.ipfsUrl!
         this._ethereumAccountIndex = -1
         this._ethereumInfos = []
         if (file.accounts != undefined)
@@ -68,7 +67,7 @@ export class State {
             return undefined
         return this._ethereumInfos[this._ethereumAccountIndex]!.asymKey
     }
-    get ipfsUrl(): string { return this._ipfsUrl }
+    // get ipfsUrl(): string { return this._ipfsUrl }
 
     /* fn: addAccount
      * use account private key and address to add a new account
@@ -78,7 +77,7 @@ export class State {
             return
         const addr = ethersUtils.computeAddress(accountKey)
         // generate asymmetic key-pair
-        const keyPair = CryptoUtils.generateAsymKey()
+        const keyPair = utils.Crypto.generateAsymKey()
         let info: AccountInfo = {
             address: addr,
             accountKey: accountKey,
@@ -152,7 +151,7 @@ export class State {
             address: this._ethereumInfos[this._ethereumAccountIndex].address,
             // accounts: this._ethereumInfos
             accounts: accounts,
-            ipfsUrl: this._ipfsUrl,
+            // ipfsUrl: this._ipfsUrl,
         }
         return JSON.stringify(json)
     }

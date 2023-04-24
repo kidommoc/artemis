@@ -2,7 +2,7 @@ import * as crypto from 'node:crypto'
 
 export const symmeticAlgorithm = 'aes-256-gcm'
 
-export class CryptoUtils {
+export class Crypto {
 
     public static symEncrypt(data: Buffer, ipfsAddr: string, accountPriKey: string)
         : { encrypted: Buffer, encKey: string }

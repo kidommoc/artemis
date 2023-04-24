@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
-import { Service } from 'typedi'
+import { Inject, Service } from 'typedi'
 
-import { State } from '@/main/utils/State'
+import { State } from '@/main/State'
 const abiArtemis = require('@/main/abi/Artemis.json')
 const abiMessage = require('@/main/abi/ArtemisMessage.json')
 
@@ -24,7 +24,7 @@ export class ContractService {
      * if account not specified, keeps related fields null
      * call updateService() once decided
      */
-    constructor (private _state: State) {
+    constructor (@Inject('State') private _state: State) {
         this._provider = new ethers.providers.JsonRpcProvider(this._state.ethereumUrl)
         if (this._state.ethereumAddr == undefined) {
             this._wallet = null

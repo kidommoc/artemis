@@ -1,7 +1,7 @@
 import { Container } from 'typedi'
 import * as fs from 'node:fs'
 
-import { State } from '@/main/utils/State'
+import { State } from '@/main/State'
 
 const CONFIG_PATH = '' // !!!!!
 
