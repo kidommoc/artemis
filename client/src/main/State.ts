@@ -1,17 +1,18 @@
-// import * as fs from 'node:fs'
-import { utils as ethersUtils } from 'ethers'
-
 import * as utils from '@/main/utils'
 
 export type AsymmeticKey = { pub: string, pri: string }
-export type AccountInfo = { address: string, accountKey: string, asymKey: AsymmeticKey}
+export type AccountInfo = {
+    address: string,
+    accountKey: string,
+    asymKey: AsymmeticKey,
+}
+
 export class State {
     private _ethereumContractArtemis: string
     private _ethereumContractMessage: string
     private _ethereumUrl: string
-    private _ethereumInfos: AccountInfo[]
     private _ethereumAccountIndex: number
-    // private _ipfsUrl: string
+    private _accountInfos: AccountInfo[]
 
     /* constructor
      * required: ipfs url, chain url and contract addrs,
@@ -21,22 +22,21 @@ export class State {
         this._ethereumContractArtemis = file.contractArtemis!
         this._ethereumContractMessage = file.contractMessage!
         this._ethereumUrl = file.ethereumUrl!
-        // this._ipfsUrl = file.ipfsUrl!
         this._ethereumAccountIndex = -1
-        this._ethereumInfos = []
+        this._accountInfos = []
         if (file.accounts != undefined)
             file.accounts!.forEach((ele: any) => {
-                if (ele.address != ethersUtils.computeAddress(ele.accountKey)) {
+                if (ele.address != utils.computeAddr(ele.accountKey)) {
                     // throw error
                 }
                 if (ele.address == file.address)
-                    this._ethereumAccountIndex = this._ethereumInfos.length
+                    this._ethereumAccountIndex = this._accountInfos.length
                 let info: AccountInfo = {
                     address: ele.address,
                     accountKey: ele.accountKey,
                     asymKey: { pub: ele.asymKey.pub, pri: ele.asymKey.pri },
                 }
-                this._ethereumInfos.push(info)
+                this._accountInfos.push(info)
             })
     }
 
@@ -49,35 +49,34 @@ export class State {
     get ethereumUrl(): string { return this._ethereumUrl }
     get ethereumAccountList(): string[] {
         let list: string[] = []
-        this._ethereumInfos.forEach(ele => list.push(ele.address))
+        this._accountInfos.forEach(ele => list.push(ele.address))
         return list
     }
     get ethereumAddr(): string | undefined {
         if (this._ethereumAccountIndex == -1)
             return undefined
-        return this._ethereumInfos[this._ethereumAccountIndex].address
+        return this._accountInfos[this._ethereumAccountIndex].address
     }
     get ethereumAccountPrivateKey(): string | undefined {
         if (this._ethereumAccountIndex == -1)
             return undefined
-        return this._ethereumInfos[this._ethereumAccountIndex].accountKey
+        return this._accountInfos[this._ethereumAccountIndex].accountKey
     }
     get asymmeticKey(): { pub: string, pri: string } | undefined {
         if (this._ethereumAccountIndex == -1)
             return undefined
-        return this._ethereumInfos[this._ethereumAccountIndex]!.asymKey
+        return this._accountInfos[this._ethereumAccountIndex]!.asymKey
     }
-    // get ipfsUrl(): string { return this._ipfsUrl }
 
     /* fn: addAccount
      * use account private key and address to add a new account
      */
-    public async addAccount(accountKey: string) {
-        if (this._ethereumInfos.findIndex(ele => ele.accountKey == accountKey) != -1)
+    public addAccount(
+        addr: string, accountKey: string, 
+        keyPair: { publicKey: string, privateKey: string }
+    ) {
+        if (this._accountInfos.findIndex(ele => ele.address == addr) != -1)
             return
-        const addr = ethersUtils.computeAddress(accountKey)
-        // generate asymmetic key-pair
-        const keyPair = utils.Crypto.generateAsymKey()
         let info: AccountInfo = {
             address: addr,
             accountKey: accountKey,
@@ -86,7 +85,7 @@ export class State {
                 pri: keyPair.privateKey
             },
         }
-        this._ethereumInfos.push(info)
+        this._accountInfos.push(info)
         if (this._ethereumAccountIndex < 0)
             this._ethereumAccountIndex = 0
     }
@@ -94,8 +93,8 @@ export class State {
     /* fn: switchAccount
      * switch current account to another on the given address
      */
-    public async switchAccount(addr: string) {
-        let index = this._ethereumInfos.findIndex(ele => ele.address == addr)
+    public switchAccount(addr: string) {
+        let index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, do not switch
         if (index == -1) {
             // throw error
@@ -106,8 +105,8 @@ export class State {
     /* fn: removeAccount
      * remove the account on the given address
      */
-    public async removeAccount(addr: string) {
-        let index = this._ethereumInfos.findIndex(ele => ele.address == addr)
+    public removeAccount(addr: string) {
+        let index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, remove nothing
         if (index == -1) {
             // throw error
@@ -118,7 +117,7 @@ export class State {
         }
         if (index > this._ethereumAccountIndex)
             --this._ethereumAccountIndex
-        this._ethereumInfos.splice(index)
+        this._accountInfos.splice(index)
     }
 
     /* fn: logout
@@ -133,7 +132,7 @@ export class State {
      */
     public serialize(): string {
         let accounts: AccountInfo[] = []
-        this._ethereumInfos.forEach(ele => {
+        this._accountInfos.forEach(ele => {
             const info: AccountInfo = {
                 address: ele.address,
                 accountKey: ele.accountKey,
@@ -148,10 +147,8 @@ export class State {
             contractArtemis: this._ethereumContractArtemis,
             contractMessage: this._ethereumContractMessage,
             ethereumUrl: this._ethereumUrl,
-            address: this._ethereumInfos[this._ethereumAccountIndex].address,
-            // accounts: this._ethereumInfos
+            address: this._accountInfos[this._ethereumAccountIndex].address,
             accounts: accounts,
-            // ipfsUrl: this._ipfsUrl,
         }
         return JSON.stringify(json)
     }
