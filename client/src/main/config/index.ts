@@ -1,6 +1,6 @@
 import { Container } from 'typedi'
-import * as fs from 'node:fs'
 
+import * as utils from '@/main/utils'
 import { State } from '@/main/State'
 
 const CONFIG_PATH = '' // !!!!!
@@ -8,7 +8,7 @@ const CONFIG_PATH = '' // !!!!!
 export default () => {
     const file = ((): object => {
         try {
-            return JSON.parse(fs.readFileSync(CONFIG_PATH).toString('utf-8'))
+            return JSON.parse(utils.FSIO.read(CONFIG_PATH))
         } catch (error) {
             // handle error
         }

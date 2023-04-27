@@ -1,11 +1,12 @@
-import * as utils from "../main/utils"
+import * as fs from 'node:fs'
+import * as utils from '../main/utils'
 
 const accountKey = '0x4e49300b828d8adcf7a10c26c773d72928c93a7e91d2c7cf3bcae126bf91f966'
 const data = 'Hello, world!'
 const ipfsAddr = 'TESTIPFSADDROFDATA'
-var asymKey: { publicKey: string, privateKey: string }
+let asymKey: { publicKey: string, privateKey: string }
 
-describe('Test crypto util', () => {
+describe('Test crypto util:', () => {
     beforeAll(() => {
         asymKey = utils.Crypto.generateAsymKey()
     })
@@ -37,5 +38,25 @@ describe('Test crypto util', () => {
             Buffer.from(data, 'utf-8'),
             signature, asymKey.publicKey)
         ).toBeTruthy()
+    })
+})
+
+describe('Test compression util:', () => {
+    test('compression and decompression', () => {
+        const compressed = utils.Compression.compress(Buffer.from(data, 'utf-8'))
+        const decompressed = utils.Compression.decompress(compressed)
+        expect(decompressed.toString('utf-8')).toEqual(data)
+    })
+})
+
+describe('Test filesystem io', () => {
+    test('read and write', () => {
+        utils.FSIO.write('testfile', data)
+        const result = utils.FSIO.read('testfile')
+        expect(result).toEqual(data)
+    })
+
+    afterAll(() => {
+        fs.rmSync('testfile')
     })
 })
