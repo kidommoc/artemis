@@ -12,10 +12,10 @@
   ],
   "compilerOptions": {
     "composite": true,
-    "target": "es6",
+    "target": "ESNext",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "commonjs",
+    "module": "ESNext",
     "moduleResolution": "nodenext",
     "baseUrl": ".",
     "paths": {
@@ -31,11 +31,13 @@
       "@types/jest"
     ],
     "resolveJsonModule": true,
+    "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
     "noEmit": false,
     "newLine": "lf",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   }
 }
