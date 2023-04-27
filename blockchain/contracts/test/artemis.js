@@ -49,6 +49,17 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         }
     })
 
+    it('should get publisher\'s name', async () => {
+        const instA = await Artemis.deployed()
+        const account0 = accounts[0]
+        try {
+            const result = await instA.getPublisherName(account0)
+            assert.equal(result, 'AUTHOR0', 'error publisher\'s name')
+        } catch (error) {
+            throw error
+        }
+    })
+
     it('should pubKey of accounts[0] is "TESTPUBKEY0"', async () => {
         const instA = await Artemis.deployed()
         const account0 = accounts[0]

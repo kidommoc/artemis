@@ -50,15 +50,20 @@ contract Artemis {
         emit RegisterPublisherEvent(msg.sender, name);
     }
 
-    function getPublisherPubKey(address publisher) public view returns (string memory pubKey) {
+    function getPublisherName(address publisher) public view returns (string memory name) {
         require(publisher != address(0), "empty publisher address!");
-        return _publs[publisher].pubKey;
+        return _publs[publisher].name;
     }
 
     function renamePublisher(string calldata name) public {
         require(bytes(name).length != 0, "empty name!");
         _publs[msg.sender].name = name;
         emit RenamePublisherEvent(msg.sender, name);
+    }
+
+    function getPublisherPubKey(address publisher) public view returns (string memory pubKey) {
+        require(publisher != address(0), "empty publisher address!");
+        return _publs[publisher].pubKey;
     }
 
     function setSubscribingPrice(uint price) public {
