@@ -2,8 +2,8 @@ import * as ethers from 'ethers'
 import { Inject, Service } from 'typedi'
 
 import { State } from '@/main/State'
-const abiArtemis = require('@/main/abi/Artemis.json')
-const abiMessage = require('@/main/abi/ArtemisMessage.json')
+import abiArtemis from '@/main/abi/Artemis.json'
+import abiMessage from '@/main/abi/ArtemisMessage.json'
 
 export enum MsgCode {
     UNKNOWN,
@@ -43,10 +43,17 @@ export class ContractService {
      * called when loging-in or switching account
      */
     public async updateService() {
-        this._wallet = new ethers.Wallet(this._state.ethereumAccountPrivateKey!, this._provider)
-        const contractAddr = this._state.ethereumContracts
-        this._artemis = new ethers.Contract(contractAddr.artemis, abiArtemis, this._wallet)
-        this._message = new ethers.Contract(contractAddr.message, abiMessage, this._wallet)
+        if (this._state.ethereumAddr == undefined) {
+            this._wallet = null
+            this._artemis = null
+            this._message = null
+        }
+        else {
+            this._wallet = new ethers.Wallet(this._state.ethereumAccountPrivateKey!, this._provider)
+            const contractAddr = this._state.ethereumContracts
+            this._artemis = new ethers.Contract(contractAddr.artemis, abiArtemis, this._wallet)
+            this._message = new ethers.Contract(contractAddr.message, abiMessage, this._wallet)
+        }
     }
 
     // ====== FOR BOTH ======
@@ -106,16 +113,15 @@ export class ContractService {
         return msgs
     }
 
-    public async clearMessage()
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async clearMessage(): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
         try {
             let tx: ethers.providers.TransactionResponse
                 = await this._message!.clearMessage()
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch (error) {
             // handle error
             throw error
@@ -125,9 +131,7 @@ export class ContractService {
     // ===== FOR PUBLISHER ======
 
     // price in ether
-    public async registerPublisher(price: number)
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async registerPublisher(price: number): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
             throw new Error()
@@ -138,7 +142,8 @@ export class ContractService {
                     this._state.asymmeticKey!.pub,
                     ethers.utils.parseEther(price.toString())
                 )
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch (error) {
             // handle error
             throw error
@@ -146,32 +151,30 @@ export class ContractService {
     }
 
     // price in ether
-    public async setSubscribingPrice(price: number)
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async setSubscribingPrice(price: number): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
         try {
             let tx: ethers.providers.TransactionResponse
                 = await this._artemis!.setSubscribingPrice(ethers.utils.parseEther(price.toString()))
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch (error) {
             // handle error
             throw error
         }
     }
 
-    public async admitSubscribing(subs: string, encKey: string)
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async admitSubscribing(subs: string, encKey: string): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
         try {
             let tx: ethers.providers.TransactionResponse
                 = await this._artemis!.admitSubscribing(subs, encKey)
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch(error) {
             // handle error
             throw error
@@ -179,7 +182,7 @@ export class ContractService {
     }
 
     public async uploadArticle(fileLoc: string, title: string, author: string, reqSubscribing: boolean)
-        : Promise<ethers.providers.TransactionResponse>
+        : Promise<string>
     {
         if (this._state.ethereumAddr == undefined) {
             // throw error
@@ -187,23 +190,23 @@ export class ContractService {
         try {
             let tx: ethers.providers.TransactionResponse
                 = await this._artemis!.uploadArticle(fileLoc, title, author, reqSubscribing)
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch(error) {
             // handle error
             throw error
         }
     }
 
-    public async removeArticle(fileLoc: string)
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async removeArticle(fileLoc: string): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
         try {
             let tx: ethers.providers.TransactionResponse
                 = await this._artemis!.removeArticle(fileLoc)
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch(error) {
             // handle error
             throw error
@@ -231,9 +234,7 @@ export class ContractService {
         return Number(ethers.utils.formatEther(result))
     }
 
-    public async subscribe(publ: string, months: number)
-        : Promise<ethers.providers.TransactionResponse>
-    {
+    public async subscribe(publ: string, months: number): Promise<string> {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
@@ -245,7 +246,8 @@ export class ContractService {
                     publ, months, this._state.asymmeticKey!.pub,
                     { value: ethers.utils.parseEther((months * price).toString()) }
                 )
-            return tx
+            await tx.wait()
+            return tx.hash
         } catch (error) {
             // handle error
             throw error
