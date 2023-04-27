@@ -4,7 +4,9 @@ pragma solidity ^0.8.13;
 import "./ArtemisMessage.sol";
 
 contract Artemis {
-    event UploadArticleEvent(string fileAddr, string title, string author, address authorAddr, bool reqSubscribing, uint256 date);
+    event RegisterPublisherEvent(address addr, string name);
+    event RenamePublisherEvent(address addr, string newName);
+    event UploadArticleEvent(address authorAddr, string fileAddr, string title, bool reqSubscribing, uint256 date);
     event RemoveArticleEvent(string fileAddr);
 
     struct Article {
@@ -23,6 +25,7 @@ contract Artemis {
     }
 
     struct PublisherInfo {
+        string name;
         string pubKey;
         uint subscribingPrice;
         mapping(address subscriber => SubscribeInfo) subscribers;
@@ -36,17 +39,26 @@ contract Artemis {
         _message = ArtemisMessage(msgAddr);
     }
 
-    function registerPublisher(string calldata pubKey, uint price) public {
+    function registerPublisher(string calldata name, string calldata pubKey, uint price) public {
+        require(bytes(name).length != 0, "empty name!");
         require(bytes(pubKey).length != 0, "empty public key!");
         if (price < 0)
             price = 0;
+        _publs[msg.sender].name = name;
         _publs[msg.sender].pubKey = pubKey;
         _publs[msg.sender].subscribingPrice = price;
+        emit RegisterPublisherEvent(msg.sender, name);
     }
 
     function getPublisherPubKey(address publisher) public view returns (string memory pubKey) {
         require(publisher != address(0), "empty publisher address!");
         return _publs[publisher].pubKey;
+    }
+
+    function renamePublisher(string calldata name) public {
+        require(bytes(name).length != 0, "empty name!");
+        _publs[msg.sender].name = name;
+        emit RenamePublisherEvent(msg.sender, name);
     }
 
     function setSubscribingPrice(uint price) public {
@@ -95,17 +107,17 @@ contract Artemis {
         return _publs[publ].subscribers[msg.sender].time;
     }
 
-    function uploadArticle(string calldata file, string calldata title, string calldata author, bool reqSubscribing) public {
+    function uploadArticle(string calldata file, string calldata title, bool reqSubscribing) public {
+        require(bytes(_publs[msg.sender].name).length != 0, "not a publisher!");
         require(bytes(file).length != 0, "empty article location!");
         require(_articles[file].authorAddr == address(0), "article exists!");
         require(bytes(title).length != 0, "empty title!");
-        require(bytes(author).length != 0, "empty author!");
         _articles[file].title = title;
-        _articles[file].author = author;
+        _articles[file].author = _publs[msg.sender].name;
         _articles[file].authorAddr = msg.sender;
         _articles[file].date = block.timestamp;
         _articles[file].requireSubscribing = reqSubscribing;
-        emit UploadArticleEvent(file, title, author, msg.sender, reqSubscribing, block.timestamp);
+        emit UploadArticleEvent(msg.sender, file, title, reqSubscribing, block.timestamp);
     }
 
     function removeArticle(string calldata file) public {

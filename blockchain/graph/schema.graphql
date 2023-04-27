@@ -13,17 +13,22 @@ type _Schema_
         language: en
         algorithm: rank
         include: [{
-            entity: "ArtemisArticle",
-            fields: [{ name: "author" }]
+            entity: "ArtemisPublisher",
+            fields: [{ name: "name" }]
         }]
     )
+
+type ArtemisPublisher @entity {
+    "id = ethereum address of publisher"
+    id: Bytes!
+    name: String!
+}
 
 type ArtemisArticle @entity {
     "id = article ipfs address in base58"
     id: String!
     title: String!
-    author: String!
-    authorAddr: Bytes!
+    author: ArtemisPublisher!
     reqSubscribing: Boolean!
     date: BigInt!
 }

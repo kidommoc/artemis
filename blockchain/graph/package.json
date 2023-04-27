@@ -1,14 +1,15 @@
 {
   "name": "artemis-blockchain",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The Graph subgraph supporting Artemis.",
   "main": "none",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
+    "generate-data": "node generateTestData",
     "create-local": "graph create kidommoc/artemis --node http://127.0.0.1:8020",
-    "deploy-local": "graph deploy kidommoc/artemis --version-label=v0.0.1 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001",
-    "watch-local": "graph deploy kidommoc/artemis --watch --version-label=v0.0.1 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001"
+    "deploy-local": "graph deploy kidommoc/artemis --version-label=v0.1.0 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001",
+    "watch-local": "graph deploy kidommoc/artemis --watch --version-label=v0.1.0 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001"
   },
   "author": "kidommoc",
   "homepage": "https://github.com/kidommoc/artemis#readme",

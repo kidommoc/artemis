@@ -15,6 +15,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "RegisterPublisherEvent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "fileAddr",
         "type": "string"
@@ -28,6 +47,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "newName",
+        "type": "string"
+      }
+    ],
+    "name": "RenamePublisherEvent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "authorAddr",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "fileAddr",
         "type": "string"
@@ -37,18 +81,6 @@
         "internalType": "string",
         "name": "title",
         "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "author",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "authorAddr",
-        "type": "address"
       },
       {
         "indexed": false,
@@ -68,6 +100,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
       {
         "internalType": "string",
         "name": "pubKey",
@@ -103,6 +140,19 @@
     "stateMutability": "view",
     "type": "function",
     "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "renamePublisher",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -209,11 +259,6 @@
       {
         "internalType": "string",
         "name": "title",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "author",
         "type": "string"
       },
       {
