@@ -10,7 +10,8 @@ dataSources:
     name: Artemis
     network: mainnet
     source:
-      address: '0x8c7979807D0c705b6c3B92b2422690b4BCA89EB8'
+      # local contract addr
+      address: '0xb3E581Fe8e6F94c23FF2272a56673219712C8197'
       abi: Artemis
       startBlock: 6
     mapping:
@@ -23,7 +24,11 @@ dataSources:
         - name: Artemis
           file: ../abi/Artemis.json
       eventHandlers:
-        - event: UploadArticleEvent(string,string,string,address,bool,uint256)
+        - event: RegisterPublisherEvent(address,string)
+          handler: handleRegisterPublisher
+        - event: RenamePublisherEvent(address,string)
+          handler: handleRenamePublisher
+        - event: UploadArticleEvent(address,string,string,bool,uint256)
           handler: handleUploadArticle
         - event: RemoveArticleEvent(string)
           handler: handleRemoveArticle

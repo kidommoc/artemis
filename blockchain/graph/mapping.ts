@@ -1,12 +1,28 @@
 import { store } from '@graphprotocol/graph-ts'
-import { UploadArticleEvent, RemoveArticleEvent } from './generated/Artemis/Artemis'
-import { ArtemisArticle } from './generated/schema'
+import {
+    RegisterPublisherEvent,
+    RenamePublisherEvent,
+    UploadArticleEvent,
+    RemoveArticleEvent
+} from './generated/Artemis/Artemis'
+import { ArtemisArticle, ArtemisPublisher } from './generated/schema'
+
+export function handleRegisterPublisher(event: RegisterPublisherEvent): void {
+    let publisher = new ArtemisPublisher(event.params.addr)
+    publisher.name = event.params.name
+    publisher.save()
+}
+
+export function handleRenamePublisher(event: RenamePublisherEvent): void {
+    let publisher = ArtemisPublisher.load(event.params.addr)!
+    publisher.name = event.params.newName
+    publisher.save()
+}
 
 export function handleUploadArticle(event: UploadArticleEvent): void {
     let article = new ArtemisArticle(event.params.fileAddr)
     article.title = event.params.title
-    article.author = event.params.author
-    article.authorAddr = event.params.authorAddr
+    article.author = event.params.authorAddr
     article.reqSubscribing = event.params.reqSubscribing
     article.date = event.params.date
     article.save()

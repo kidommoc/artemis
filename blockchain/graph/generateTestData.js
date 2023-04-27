@@ -10,9 +10,9 @@ function toAddr(str) {
     return result
 }
 
-async function uploadArticle(artemis, addrCode, title, author, reqSub) {
+async function uploadArticle(artemis, addrCode, title, reqSub) {
     try {
-        await (await artemis.uploadArticle(toAddr(addrCode), title, author, reqSub)).wait()
+        await (await artemis.uploadArticle(toAddr(addrCode), title, reqSub)).wait()
     } catch (error) { console.log (error) }
 }
 
@@ -23,33 +23,37 @@ async function removeArticle(artemis, addrCode) {
 }
 
 async function fn() {
+    // local testnet url
     let provider = new ethers.providers.JsonRpcProvider('http://127.0.0.1:7545')
+    // local test account
     let signer = [
-        new ethers.Wallet('0x48174fb0ea3f9a8fc255603eb795eb6fab56acae0a2d1b4c5e663c99001c8318', provider),
-        new ethers.Wallet('0x4d3a37c12b361fd94f6baac46f77ecad11b890dbad6aca930fb96d66dd67a61a', provider),
-        new ethers.Wallet('0x31b44987a7e6b323f293fa2b412f968f2ee14b68be1423c48720d4d984b573cc', provider),
+        new ethers.Wallet('0x29dd746733502b3134c5dc9051dc8c7dd0338beb2501187832cfb1ae6ba951d4', provider),
+        new ethers.Wallet('0xa18cab23a0a1d9288442f74df53f5da598e132708f6cef46cfe293d99f8924e9', provider),
+        new ethers.Wallet('0x57a79ddc9ac5e8fd86821d06c8693600f0ef2a3cef87005fac3ea6abcabe9fa4', provider),
     ]
+    // local contract addr
     let artemis = [
-        new ethers.Contract('0x8c7979807D0c705b6c3B92b2422690b4BCA89EB8', artemisAbi, signer[0]),
-        new ethers.Contract('0x8c7979807D0c705b6c3B92b2422690b4BCA89EB8', artemisAbi, signer[1]),
-        new ethers.Contract('0x8c7979807D0c705b6c3B92b2422690b4BCA89EB8', artemisAbi, signer[2]),
+        new ethers.Contract('0xb3E581Fe8e6F94c23FF2272a56673219712C8197', artemisAbi, signer[0]),
+        new ethers.Contract('0xb3E581Fe8e6F94c23FF2272a56673219712C8197', artemisAbi, signer[1]),
+        new ethers.Contract('0xb3E581Fe8e6F94c23FF2272a56673219712C8197', artemisAbi, signer[2]),
     ]
-    await artemis[0].registerPublisher('TESTPUBKEY0', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
-    await artemis[1].registerPublisher('TESTPUBKEY1', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
-    await artemis[2].registerPublisher('TESTPUBKEY2', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
+    await artemis[0].registerPublisher('AUTHOR 7', 'TESTPUBKEY0', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
+    console.log(`account 7 register as AUTHOR 7`)
+    await artemis[1].registerPublisher('AUTHOR 8', 'TESTPUBKEY1', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
+    console.log(`account 8 register as AUTHOR 8`)
+    await artemis[2].registerPublisher('AUTHOR 9', 'TESTPUBKEY2', ethers.utils.parseEther((Math.floor(Math.random() * 5) / 100).toString()))
+    console.log(`account 9 register as AUTHOR 9`)
     for (let i = 0; i < 20; ++i) {
         let contract = Math.floor(Math.random() * 3)
         let reqSub = Boolean(Math.round(Math.random()))
         let addrCode = addrCodePrefix
         if (i < 10) addrCode += '0' + Math.floor(i)
         else addrCode += Math.floor(i % 100)
-        await uploadArticle(artemis[contract], addrCode, `test title ${i}`, `account${contract + 7}`, reqSub)
+        await uploadArticle(artemis[contract], addrCode, `test title ${i}`, reqSub)
         console.log(`uploaded test article${i} by account${contract + 7} at ADDR(${addrCode}), require subscribing: ${reqSub}.`)
     }
     /* replace ? to number */
     // await removeArticle(artemis[?], addrCodePrefix + '??')
 }
-
-// Math.floor(10.5)
 
 fn()
