@@ -1,5 +1,5 @@
 import * as fs from 'node:fs'
-import { resolve} from 'node:path'
+import { resolve } from 'node:path'
 
 /* simple wrapper of node:fs file io
  * used for read/write config and asymmetic keys

@@ -5,6 +5,8 @@ export type AccountInfo = {
     address: string,
     accountKey: string,
     asymKey: AsymmeticKey,
+    isPublisher: boolean,
+    name: string | undefined,
 }
 
 export class State {
@@ -35,6 +37,8 @@ export class State {
                     address: ele.address,
                     accountKey: ele.accountKey,
                     asymKey: { pub: ele.asymKey.pub, pri: ele.asymKey.pri },
+                    isPublisher: ele.isPublisher,
+                    name: ele.name,
                 }
                 this._accountInfos.push(info)
             })
@@ -67,13 +71,53 @@ export class State {
             return undefined
         return this._accountInfos[this._ethereumAccountIndex]!.asymKey
     }
+    set asymmeticKey(keyPair: {pub: string, pri: string} | undefined) {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        if (keyPair == undefined || keyPair!.pub == undefined || keyPair!.pri == undefined) {
+            // throw error
+        }
+        this._accountInfos[this._ethereumAccountIndex].asymKey.pub = keyPair!.pub
+        this._accountInfos[this._ethereumAccountIndex].asymKey.pri = keyPair!.pri
+    }
+    get name(): string | undefined {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        return this._accountInfos[this._ethereumAccountIndex].name
+    }
+    set name(newName: string| undefined) {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        if (newName == undefined) {
+            // throw error
+        }
+        this._accountInfos[this._ethereumAccountIndex].name = newName!
+    }
+
+    public isPublisher(): boolean {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        return this._accountInfos[this._ethereumAccountIndex].isPublisher
+    }
+
+    public registerPublisher() {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        this._accountInfos[this._ethereumAccountIndex].isPublisher = true
+    }
 
     /* fn: addAccount
      * use account private key and address to add a new account
      */
     public addAccount(
         addr: string, accountKey: string, 
-        keyPair: { publicKey: string, privateKey: string }
+        keyPair: { publicKey: string, privateKey: string },
+        isPublisher: boolean, name: string | undefined
     ) {
         if (this._accountInfos.findIndex(ele => ele.address == addr) != -1)
             return
@@ -84,6 +128,8 @@ export class State {
                 pub: keyPair.publicKey,
                 pri: keyPair.privateKey
             },
+            isPublisher: isPublisher,
+            name: name,    
         }
         this._accountInfos.push(info)
         if (this._ethereumAccountIndex < 0)
@@ -140,6 +186,8 @@ export class State {
                     pub: ele.asymKey.pub,
                     pri: ele.asymKey.pri,
                 },
+                isPublisher: ele.isPublisher,
+                name: ele.name,
             }
             accounts.push(info)
         })

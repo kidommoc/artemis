@@ -4,7 +4,7 @@ import * as utils from '../main/utils'
 import { State } from '../main/State'
 import { IPFSService } from '../main/services/IPFS'
 
-const accountPriKey = '0x4e49300b828d8adcf7a10c26c773d72928c93a7e91d2c7cf3bcae126bf91f966'
+const accountPriKey = '0xb3f597447ec2c36bbbf6ac65c9bf28428b0b9423fa28a26cd7a262dd4b4e147d'
 const title = 'hello-world'
 const data = 'hello, world!'
 let cid: string
@@ -18,7 +18,11 @@ beforeAll(async () => {
     Container.set('IPFSNode', ipfsNode)
     const file = utils.FSIO.read('./src/test/test-state.json')
     state = new State(JSON.parse(file))
-    state.addAccount(utils.computeAddr(accountPriKey), accountPriKey, { publicKey: '', privateKey: '' })
+    state.addAccount(
+        utils.computeAddr(accountPriKey), accountPriKey,
+        { publicKey: '', privateKey: '' },
+        true, 'AUTHOR 0'
+    )
     Container.set('State', state)
 
     let list: string[] = []

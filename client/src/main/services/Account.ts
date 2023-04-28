@@ -12,14 +12,6 @@ export class AccountService {
         @Inject() private _ipfsService: IPFSService
     ) {}
 
-    public async addAccount(accountKey: string) {
-        const addr = utils.computeAddr(accountKey)
-        const keyPair = utils.Crypto.generateAsymKey()
-        this._state.addAccount(addr, accountKey, keyPair)
-        await this._contractService.updateService()
-        await this._ipfsService.createUserDir(addr)
-    }
-
     public async login(accountAddr: string) {
         const list = this._state.ethereumAccountList
         if (list.findIndex(ele => ele == accountAddr) == -1) {
@@ -27,14 +19,57 @@ export class AccountService {
         }
         await this.switchAccount(accountAddr)
     }
-
-    public async switchAccount(accountAddr: string) {
-        this._state.switchAccount(accountAddr)
-        await this._contractService.updateService()
-    }
     
     public async logout() {
         this._state.logout()
         await this._contractService.updateService()
+    }
+
+    public switchAccount(accountAddr: string) {
+        this._state.switchAccount(accountAddr)
+        this._contractService.updateService()
+    }
+
+    public async addAccount(accountKey: string) {
+        const addr = utils.computeAddr(accountKey)
+        const keyPair = utils.Crypto.generateAsymKey()
+        const name = await this._contractService.getPublisherName(addr)
+        let isPublisher = false
+        if (name != undefined)
+            isPublisher = true
+        this._state.addAccount(addr, accountKey, keyPair, isPublisher, name)
+        await this._contractService.updateService()
+        await this._ipfsService.createUserDir(addr)
+    }
+
+    public async registerPublisher(name: string, price: number) {
+        if (this._state.isPublisher()) {
+            // throw error
+        }
+        await this._contractService.registerPublisher(name, price)
+        this._state.name = name
+        this._state.registerPublisher()
+    }
+
+    public async rename(newName: string) {
+        if (this._state.isPublisher())
+            await this._contractService.renamePublisher(newName)
+        this._state.name = newName
+    }
+
+    public importAsymKeys(path: string) {
+        const file = JSON.parse(utils.FSIO.read(path))
+        this._state.asymmeticKey = { pub: file.publicKey!, pri: file.privateKey! }
+    }
+
+    public exportAsymKeys(path: string) {
+        if (this._state.ethereumAddr == undefined) {
+            // throw error
+        }
+        const file = {
+            publicKey: this._state.asymmeticKey!.pub,
+            privateKey: this._state.asymmeticKey!.pri,
+        }
+        utils.FSIO.write(path, JSON.stringify(file))
     }
 }

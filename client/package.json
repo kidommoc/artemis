@@ -1,6 +1,6 @@
 {
   "name": "artemis",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "a blockchain-and-ipfs-based media distributing system",
   "main": "./dist/main/main.js",
   "author": "kidommoc",

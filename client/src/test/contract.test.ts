@@ -6,6 +6,7 @@ import { State } from '../main/State'
 import { AccountService } from '../main/services/Account'
 import { ContractService, MsgCode as ContractMsgCode } from '../main/services/Contract'
 
+// local test accounts
 const account0PriKey = '0xb3f597447ec2c36bbbf6ac65c9bf28428b0b9423fa28a26cd7a262dd4b4e147d'
 const account1PriKey = '0x03efea105c6494e60a30ce57062cb21d95e037c7500143e8df514f4477fc1b0a'
 const freeArticleAddr = 'TEST_ADDR_FREETOACCESS_IN_BASE_58'
@@ -21,7 +22,6 @@ describe('Test contract service:', () => {
     beforeAll(async () => {
         const ipfs = await import('ipfs-core')
         const file = utils.FSIO.read('./src/test/test-state.json')
-        console.log(file)
         state = new State(JSON.parse(file))
         Container.set('State', state)
         ipfsNode = await ipfs.create()
@@ -32,8 +32,8 @@ describe('Test contract service:', () => {
 
     test('login account0 and account1', async () => {
         // test adding account
-        accountService.addAccount(account0PriKey)
-        accountService.addAccount(account1PriKey)
+        await accountService.addAccount(account0PriKey)
+        await accountService.addAccount(account1PriKey)
         accountList = state.ethereumAccountList
 
         // check list and current account
@@ -48,7 +48,23 @@ describe('Test contract service:', () => {
 
     test('account0: register as publisher', async () => {
         accountService.switchAccount(accountList[0])
-        await contractService.registerPublisher(0.05)
+        await accountService.registerPublisher('ACCOUNT 0', 0.05)
+        const result = await contractService.getPublisherName(accountList[0])
+        expect(result).toEqual('ACCOUNT 0')
+    })
+
+    test('account0, account1: check publisher', () => {
+        accountService.switchAccount(accountList[0])
+        expect(state.isPublisher()).toBeTruthy()
+        accountService.switchAccount(accountList[1])
+        expect(state.isPublisher()).toBeFalsy()
+    })
+
+    test('account0: rename as publisher', async () => {
+        accountService.switchAccount(accountList[0])
+        await contractService.renamePublisher('AUTHOR 0')
+        const result = await contractService.getPublisherName(accountList[0])
+        expect(result).toEqual('AUTHOR 0')
     })
 
     test ('account1: fetch publisher info', async () => {
@@ -62,15 +78,15 @@ describe('Test contract service:', () => {
 
     test('account0: upload a free article', async () => {
         accountService.switchAccount(accountList[0])
-        await contractService.uploadArticle(freeArticleAddr, 'free to read!', 'AUTHOR0', false)
+        await contractService.uploadArticle(freeArticleAddr, 'free to read!', false)
     })
 
     test('account1: fetch info of free article', async () => {
         accountService.switchAccount(accountList[1])
         const info = await contractService.getArticleInfo(freeArticleAddr)
-        expect(info.title).toEqual('free to read!')
         expect(info.authorAddr).toEqual(accountList[0])
-        expect(info.author).toEqual('AUTHOR0')
+        expect(info.title).toEqual('free to read!')
+        expect(info.author).toEqual('AUTHOR 0')
         expect(info.reqSubscribing).toBeFalsy()
     })
 
@@ -95,7 +111,7 @@ describe('Test contract service:', () => {
 
     test('account0: upload paid article', async () => {
         accountService.switchAccount(accountList[0])
-        await contractService.uploadArticle(paidArticleAddr, 'need subscribing!', 'AUTHOR0', true)
+        await contractService.uploadArticle(paidArticleAddr, 'need subscribing!', true)
     })
 
     test('account1: cannot access paid article', async () => {
