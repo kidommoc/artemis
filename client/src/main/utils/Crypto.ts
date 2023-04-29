@@ -26,6 +26,9 @@ export class Crypto {
 
     public static symDecrypt(buffer: Buffer, ipfsAddr: string, encryptKey: string): Buffer {
         const meta = encryptKey.split('@@')
+        if (meta.length < 2) {
+            // throw error
+        }
         const iv = crypto.createHash('sha256')
             .update(ipfsAddr).digest('hex')
             .substring(0, 32)
@@ -50,12 +53,24 @@ export class Crypto {
                     format: 'pem',
                 },
                 privateKeyEncoding: {
-                    type: 'pkcs8',
+                    type: 'pkcs1',
                     format: 'pem',
                 },
             }
         )
         return keyPair
+    }
+
+    public static verifyKeyPair(pub: string, pri: string): boolean {
+        const generated = crypto.createPublicKey({
+            key: pri,
+            type: 'pkcs1',
+            format: 'pem',
+        }).export({
+            type: 'spki',
+            format: 'pem',
+        }).toString()
+        return generated == pub
     }
 
     public static asymEncrypt(msg: string, publicKey: string): string {

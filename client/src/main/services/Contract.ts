@@ -103,9 +103,9 @@ export class ContractService {
             // throw error
         }
         const result = await this._message!.fetchMessage()
-        if (typeof result.msgSenders != typeof []
-            || typeof result.msgCodes != typeof []
-            || typeof result.msgContents != typeof []
+        if (Array.isArray(result.msgSenders)
+            || Array.isArray(result.msgCodes)
+            || Array.isArray(result.msgContents)
             || result.msgSenders.length != result.msgCodes.length
             || result.msgSenders.length != result.msgContents.length
         ) {

@@ -87,6 +87,18 @@ describe('Test account service', () => {
         expect(state.isPublisher()).toBeFalsy()
     })
 
+    test('follow', () => {
+        accountService.switchAccount(addrs[1])
+        accountService.follow(addrs[0], 'account0')
+        expect(state.following.findIndex(ele => ele.addr == addrs[0])).not.toEqual(-1)
+    })
+
+    test('unfollow', () => {
+        accountService.switchAccount(addrs[1])
+        accountService.unfollow(addrs[0])
+        expect(state.following.findIndex(ele => ele.addr == addrs[0])).toEqual(-1)
+    })
+
     test('export and import asymmetic key', () => {
         accountService.switchAccount(addrs[1])
         const keyPair = state.asymmeticKey

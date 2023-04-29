@@ -19,7 +19,7 @@ export class IPFSService {
             }
             const index = this._dlist.findIndex(ele => ele.cid == cid)
             if (index != -1)
-                this._dlist = this._dlist.splice(index)
+                this._dlist.splice(index)
         } catch (error) {
             // handle error
         }

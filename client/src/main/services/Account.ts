@@ -57,6 +57,14 @@ export class AccountService {
         this._state.name = newName
     }
 
+    public follow(addr: string, name: string) {
+        this._state.follow(addr, name)
+    }
+
+    public unfollow(addr: string) {
+        this._state.unfollow(addr)
+    }
+
     public importAsymKeys(path: string) {
         const file = JSON.parse(utils.FSIO.read(path))
         this._state.asymmeticKey = { pub: file.publicKey!, pri: file.privateKey! }

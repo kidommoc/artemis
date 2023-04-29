@@ -7,6 +7,7 @@ export type AccountInfo = {
     asymKey: AsymmeticKey,
     isPublisher: boolean,
     name: string | undefined,
+    following: { addr: string, name: string }[],
 }
 
 export class State {
@@ -14,31 +15,66 @@ export class State {
     private _ethereumContractMessage: string
     private _ethereumUrl: string
     private _ethereumAccountIndex: number
-    private _accountInfos: AccountInfo[]
+    private _accountInfos: AccountInfo[] = []
 
     /* constructor
      * required: ipfs url, chain url and contract addrs,
      * optional: log-in accounts
      */
     constructor(file: any) {
+        // empty check
+        if (file.contractArtemis! == undefined
+            || file.contractMessage! == undefined
+            || file.ethereumUrl! == undefined
+        ) {
+            // throw error
+        }
+
         this._ethereumContractArtemis = file.contractArtemis!
         this._ethereumContractMessage = file.contractMessage!
         this._ethereumUrl = file.ethereumUrl!
         this._ethereumAccountIndex = -1
-        this._accountInfos = []
+
         if (file.accounts != undefined)
-            file.accounts!.forEach((ele: any) => {
-                if (ele.address != utils.computeAddr(ele.accountKey)) {
+            file.accounts!.forEach(ele => {
+                // empty/error check
+                if (ele.accountAddress! == undefined
+                    || ele.accountPrivateKey! == undefined
+                    || ele.asymmeticKey! == undefined
+                    || ele.asymmeticKey.publicKey! == undefined
+                    || ele.asymmeticKey.privateKey! == undefined
+                    || ele.isPublisher! == undefined
+                ) {
                     // throw error
                 }
-                if (ele.address == file.address)
+                if (ele.accountAddress != utils.computeAddr(ele.accountPrivateKey)) {
+                    // throw error
+                }
+                if (utils.Crypto.verifyKeyPair(ele.asymmeticKey.publicKey, ele.asymmeticKey.privateKey)) {
+                    // throw error
+                }
+
+                if (ele.accountAddress == file.loginAccountAddress!)
                     this._ethereumAccountIndex = this._accountInfos.length
+                let following: { addr: string, name: string }[] = []
+                if (Array.isArray(ele.following))
+                    ele.following.forEach(ele => {
+                        if (ele.address != undefined && ele.name != undefined)
+                            following.push({
+                                addr: ele.address,
+                                name: ele.name,
+                            })
+                    }) 
                 let info: AccountInfo = {
-                    address: ele.address,
-                    accountKey: ele.accountKey,
-                    asymKey: { pub: ele.asymKey.pub, pri: ele.asymKey.pri },
+                    address: ele.accountAddress,
+                    accountKey: ele.accountPrivateKey,
+                    asymKey: {
+                        pub: ele.asymmeticKey.public,
+                        pri: ele.asymmeticKey.private
+                    },
                     isPublisher: ele.isPublisher,
                     name: ele.name,
+                    following: following
                 }
                 this._accountInfos.push(info)
             })
@@ -96,6 +132,12 @@ export class State {
         }
         this._accountInfos[this._ethereumAccountIndex].name = newName!
     }
+    get following(): { addr: string, name: string }[] {
+        if (this._ethereumAccountIndex == -1) {
+            // throw error
+        }
+        return this._accountInfos[this._ethereumAccountIndex].following
+    }
 
     public isPublisher(): boolean {
         if (this._ethereumAccountIndex == -1) {
@@ -109,6 +151,26 @@ export class State {
             // throw error
         }
         this._accountInfos[this._ethereumAccountIndex].isPublisher = true
+    }
+
+    public follow(addr: string, name: string) {
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .following.findIndex(ele => ele.addr == addr)
+        if (index != -1)
+            return
+        this._accountInfos[this._ethereumAccountIndex].following.push({
+            addr: addr,
+            name: name,
+        })
+    }
+
+    public unfollow(addr: string) {
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .following.findIndex(ele => ele.addr == addr)
+        if (index == -1)
+            return
+        this._accountInfos[this._ethereumAccountIndex]
+            .following.splice(index)
     }
 
     /* fn: addAccount
@@ -130,6 +192,7 @@ export class State {
             },
             isPublisher: isPublisher,
             name: name,    
+            following: [],
         }
         this._accountInfos.push(info)
         if (this._ethereumAccountIndex < 0)
@@ -177,17 +240,23 @@ export class State {
      * return serialized state for storage
      */
     public serialize(): string {
-        let accounts: AccountInfo[] = []
+        let accounts: any[] = []
         this._accountInfos.forEach(ele => {
-            const info: AccountInfo = {
-                address: ele.address,
-                accountKey: ele.accountKey,
-                asymKey: {
-                    pub: ele.asymKey.pub,
-                    pri: ele.asymKey.pri,
+            let following: { address: string, name: string }[] = []
+            ele.following.forEach( ele => following.push({
+                address: ele.addr,
+                name: ele.name,
+            }))
+            const info = {
+                accountAddress: ele.address,
+                accountPrivateKey: ele.accountKey,
+                asymmeticKey: {
+                    public: ele.asymKey.pub,
+                    private: ele.asymKey.pri,
                 },
                 isPublisher: ele.isPublisher,
                 name: ele.name,
+                following: following,
             }
             accounts.push(info)
         })
@@ -195,7 +264,7 @@ export class State {
             contractArtemis: this._ethereumContractArtemis,
             contractMessage: this._ethereumContractMessage,
             ethereumUrl: this._ethereumUrl,
-            address: this._accountInfos[this._ethereumAccountIndex].address,
+            loginAccountAddress: this.ethereumAddr,
             accounts: accounts,
         }
         return JSON.stringify(json)
