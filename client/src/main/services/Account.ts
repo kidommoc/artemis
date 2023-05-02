@@ -17,9 +17,6 @@ export class AccountService {
 
     private async admitSubscribing(addr: string, pubKey: string) {
         const accountKey = this._state.ethereumAccountPrivateKey
-        if (accountKey == undefined) {
-            // throw error
-        }
         const encKey = utils.Crypto.getSymEncKey(accountKey!)
         const encrypted = utils.Crypto.asymEncrypt(encKey, pubKey)
         await this._contractService.admitSubscribing(addr, encrypted)
@@ -28,10 +25,11 @@ export class AccountService {
     public switchAccount(accountAddr: string) {
         const list = this._state.ethereumAccountList
         if (list.findIndex(ele => ele.addr == accountAddr) == -1) {
-            // throw error
+            throw new Error('Inexistent account!')
         }
         this._state.switchAccount(accountAddr)
         this._contractService.updateService()
+        this.handleMessage()
     }
 
     public logout() {
@@ -52,9 +50,8 @@ export class AccountService {
     }
 
     public async registerPublisher(name: string, price: number) {
-        if (this._state.isPublisher()) {
-            // throw error
-        }
+        if (this._state.isPublisher())
+            throw new Error('Already a publisher!')
         await this._contractService.registerPublisher(name, price)
         this._state.name = name
         this._state.registerPublisher()
@@ -68,23 +65,21 @@ export class AccountService {
 
     public async follow(addr: string) {
         const name = await this._contractService.getPublisherName(addr)
-        if (name! == undefined) {
-            // throw error
-        }
+        if (name! == undefined)
+            throw new Error('Not a publisher!')
         this._state.follow(addr, name!, SubscribingStatus.NO)
-    }
-
-    public async subscribe(addr: string, months: number) {
-        const name = await this._contractService.getPublisherName(addr)
-        if (name! == undefined) {
-            // throw error
-        }
-        await this._contractService.subscribe(addr, months)
-        this._state.follow(addr, name!, SubscribingStatus.REQ)
     }
 
     public unfollow(addr: string) {
         this._state.unfollow(addr)
+    }
+
+    public async subscribe(addr: string, months: number) {
+        const name = await this._contractService.getPublisherName(addr)
+        if (name! == undefined)
+            throw new Error('Not a publisher!')
+        await this._contractService.subscribe(addr, months)
+        this._state.follow(addr, name!, SubscribingStatus.REQ)
     }
 
     public importAsymKeys(path: string) {
@@ -93,9 +88,6 @@ export class AccountService {
     }
 
     public exportAsymKeys(path: string) {
-        if (this._state.ethereumAddr == undefined) {
-            // throw error
-        }
         const file = {
             publicKey: this._state.asymmeticKey!.pub,
             privateKey: this._state.asymmeticKey!.pri,

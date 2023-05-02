@@ -3,7 +3,7 @@ import { State } from '@/main/State'
 
 @Service()
 export class IPFSService {
-    private _dlist: { cid: string, title: string}[] = []
+    private _dlist: { cid: string, date: Date }[] = []
 
     constructor(
         @Inject('State') private _state: State,
@@ -12,17 +12,34 @@ export class IPFSService {
 
     private async removePin(cid: string) {
         const CID = (await import('multiformats')).CID
-        try {
-            const result = this._node.pin.rm(CID.parse(cid))
-            if (cid != result) {
-                // throw error
-            }
-            const index = this._dlist.findIndex(ele => ele.cid == cid)
-            if (index != -1)
-                this._dlist.splice(index)
-        } catch (error) {
-            // handle error
+        const result = this._node.pin.rm(CID.parse(cid))
+        if (cid != result) {
+            // throw error
         }
+        const index = this._dlist.findIndex(ele => ele.cid == cid)
+        if (index != -1)
+            this._dlist.splice(index)
+    }
+
+    private async clearPins() {
+        const expired = new Date().getTime() + 30 * 86400
+        for (let i = 0; i < this._dlist.length; ++i)
+            if (this._dlist[i].date.getTime() < expired) {
+                await this.removePin(this._dlist[i].cid)
+                this._dlist = this._dlist.splice(i)
+                --i
+            }
+    }
+
+    // havn't been tested!
+    private async downloadFile(cid: string) {
+        const CID = (await import('multiformats')).CID
+        this.clearPins()
+        const result = this._node.pin.add(CID.parse(cid))
+        if (cid != result.toString()) {
+            // throw error
+        }
+        this._dlist.push({ cid: cid, date: new Date() })
     }
 
     // ===== publisher files =====
@@ -54,17 +71,12 @@ export class IPFSService {
     public async addFile(title: string, content: Buffer): Promise<string> {
         const name = `${title}.artemis` 
         const path = `/${this._state.ethereumAddr!}/${name}`
-        try {
-            const { cid } = await this._node.add({
-                path: `/${name}`,
-                content: content,
-            })
-            await this._node.files.write(path, cid.toString(), { create: true })
-            return cid.toString()
-        } catch (error) {
-            // handle error
-            throw error
-        }
+        const { cid } = await this._node.add({
+            path: `/${name}`,
+            content: content,
+        })
+        await this._node.files.write(path, cid.toString(), { create: true })
+        return cid.toString()
     }
 
     public async removeFile(title: string) {
@@ -73,42 +85,17 @@ export class IPFSService {
         for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr!}/${title}.artemis`))
             chunks.push(chunk)
         const cid = Buffer.concat(chunks).toString('utf-8')
-        this.removePin(cid)
+        await this.removePin(cid)
         await this._node.files.rm(path)
     }
 
     // ===== reader files =====
 
-    get downloadList(): { cid: string, title: string }[] { return this._dlist }
-
     public async retrieveFile(cid: string): Promise<Buffer> {
-        try {
-            let chunks: any[] = []
-            for await (const chunk of this._node.cat(cid))
-                chunks.push(chunk)
-            return Buffer.concat(chunks)
-        } catch (error) {
-            // handle error
-            throw error
-        }
-    }
-
-    // havn't been tested!
-    public async downloadFile(cid: string, title: string) {
-        const CID = (await import('multiformats')).CID
-        try {
-            const result = this._node.pin.add(CID.parse(cid))
-            if (cid != result.toString()) {
-                // throw error
-            }
-            this._dlist.push({ cid: cid, title: title })
-        } catch (error) {
-            // handle error
-        }
-    }
-
-    // havn't been tested!
-    public async removeDownloaded(cid: string) {
-        await this.removePin(cid)
+        let chunks: any[] = []
+        for await (const chunk of this._node.cat(cid))
+            chunks.push(chunk)
+        await this.downloadFile(cid)
+        return Buffer.concat(chunks)
     }
 }
