@@ -27,7 +27,7 @@ contract Artemis {
     struct PublisherInfo {
         string name;
         string pubKey;
-        uint subscribingPrice;
+        uint256 subscribingPrice;
         mapping(address subscriber => SubscribeInfo) subscribers;
     }
 
@@ -42,6 +42,7 @@ contract Artemis {
     function registerPublisher(string calldata name, string calldata pubKey, uint price) public {
         require(bytes(name).length != 0, "empty name!");
         require(bytes(pubKey).length != 0, "empty public key!");
+        require(bytes(_publs[msg.sender].name).length == 0, "already registered!");
         if (price < 0)
             price = 0;
         _publs[msg.sender].name = name;
@@ -72,7 +73,7 @@ contract Artemis {
         _publs[msg.sender].subscribingPrice = price;
     }
     
-    function getSubscribingPrice(address publ) public view returns (uint) {
+    function getSubscribingPrice(address publ) public view returns (uint256 price) {
         return _publs[publ].subscribingPrice;
     }
 
@@ -85,7 +86,7 @@ contract Artemis {
         if (subInfo.time == 0 || subInfo.time < block.timestamp) {
             // no
             _message.sendMessage(msg.sender, publ, 1, pubKey); // 1 means SUB_REQ
-            subInfo.requestTime = block.timestamp + months*30 days + 1 days;
+            subInfo.requestTime = months*30 days + 1 days;
             subInfo.payment = msg.value;
         }
         else {
@@ -99,15 +100,15 @@ contract Artemis {
         require(subscriber != address(0), "empty subscriber address!");
         require(bytes(encKey).length != 0, "empty Encryted AES Key!");
         SubscribeInfo storage info = _publs[msg.sender].subscribers[subscriber];
-        _message.sendMessage(msg.sender, subscriber, 2, "OK");
+        _message.sendMessage(msg.sender, subscriber, 2, "OK"); // 2 means SUB_RES
         info.encryptedAESKey = encKey;
-        info.time = info.requestTime;
+        info.time = block.timestamp + info.requestTime;
         payable(msg.sender).transfer(info.payment);
         delete info.requestTime;
         delete info.payment;
     }
 
-    function getSubscribingTime(address publ) public view returns (uint time) {
+    function getSubscribingTime(address publ) public view returns (uint256 time) {
         require(publ != address(0), "empty publisher address!");
         return _publs[publ].subscribers[msg.sender].time;
     }
@@ -133,12 +134,12 @@ contract Artemis {
     }
 
     function getArticleInfo(string calldata file) public view
-        returns (address authorAddr, string memory title, string memory author, bool requireSubscribing)
+        returns (address authorAddr, string memory title, string memory author, uint256 date, bool requireSubscribing)
     {
         require(bytes(file).length != 0, "empty article location!");
         Article storage a = _articles[file];
         require(a.authorAddr != address(0), "article doesn't exist!");
-        return (a.authorAddr, a.title, a.author, a.requireSubscribing);
+        return (a.authorAddr, a.title, a.author, a.date, a.requireSubscribing);
     }
 
     function accessArticle(string calldata file) public view returns (bool permission, string memory encKey) {

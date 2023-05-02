@@ -197,7 +197,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "price",
         "type": "uint256"
       }
     ],
@@ -324,6 +324,11 @@
         "internalType": "string",
         "name": "author",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "date",
+        "type": "uint256"
       },
       {
         "internalType": "bool",

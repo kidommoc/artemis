@@ -11,7 +11,7 @@ dataSources:
     network: mainnet
     source:
       # local contract addr
-      address: '0xb3E581Fe8e6F94c23FF2272a56673219712C8197'
+      address: ''
       abi: Artemis
       startBlock: 6
     mapping:

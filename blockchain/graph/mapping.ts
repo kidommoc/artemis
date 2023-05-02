@@ -23,8 +23,8 @@ export function handleUploadArticle(event: UploadArticleEvent): void {
     let article = new ArtemisArticle(event.params.fileAddr)
     article.title = event.params.title
     article.author = event.params.authorAddr
-    article.reqSubscribing = event.params.reqSubscribing
     article.date = event.params.date
+    article.reqSubscribing = event.params.reqSubscribing
     article.save()
 }
 
