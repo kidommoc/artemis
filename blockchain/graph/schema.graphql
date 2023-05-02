@@ -29,6 +29,6 @@ type ArtemisArticle @entity {
     id: String!
     title: String!
     author: ArtemisPublisher!
-    reqSubscribing: Boolean!
     date: BigInt!
+    reqSubscribing: Boolean!
 }
