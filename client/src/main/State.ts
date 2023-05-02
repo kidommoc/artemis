@@ -1,5 +1,10 @@
 import * as utils from '@/main/utils'
 
+export enum SubscribingStatus {
+    NO,
+    REQ,
+    YES,
+}
 export type AsymmeticKey = { pub: string, pri: string }
 export type AccountInfo = {
     address: string,
@@ -7,14 +12,19 @@ export type AccountInfo = {
     asymKey: AsymmeticKey,
     isPublisher: boolean,
     name: string | undefined,
-    following: { addr: string, name: string }[],
+    following: {
+        addr: string,
+        name: string,
+        isSubscribing: SubscribingStatus
+    }[],
 }
 
 export class State {
+    private _ethereumUrl: string
     private _ethereumContractArtemis: string
     private _ethereumContractMessage: string
-    private _ethereumUrl: string
     private _ethereumAccountIndex: number
+    private _graphqlUrl: string
     private _accountInfos: AccountInfo[] = []
 
     /* constructor
@@ -23,159 +33,168 @@ export class State {
      */
     constructor(file: any) {
         // empty check
-        if (file.contractArtemis! == undefined
-            || file.contractMessage! == undefined
-            || file.ethereumUrl! == undefined
+        if (file.EthereumUrl! == undefined
+            || file.ContractMessage! == undefined
+            || file.ContractArtemis! == undefined
+            || file.GraphQLUrl! == undefined
         ) {
             // throw error
         }
 
-        this._ethereumContractArtemis = file.contractArtemis!
-        this._ethereumContractMessage = file.contractMessage!
-        this._ethereumUrl = file.ethereumUrl!
+        this._ethereumUrl = file.EthereumUrl!
+        this._ethereumContractArtemis = file.ContractArtemis!
+        this._ethereumContractMessage = file.ContractMessage!
+        this._graphqlUrl = file.GraphQLUrl!
         this._ethereumAccountIndex = -1
 
-        if (file.accounts != undefined)
-            file.accounts!.forEach(ele => {
+        if (file.Accounts != undefined)
+            file.Accounts!.forEach(ele => {
                 // empty/error check
-                if (ele.accountAddress! == undefined
-                    || ele.accountPrivateKey! == undefined
-                    || ele.asymmeticKey! == undefined
-                    || ele.asymmeticKey.publicKey! == undefined
-                    || ele.asymmeticKey.privateKey! == undefined
-                    || ele.isPublisher! == undefined
+                if (ele.AccountAddress! == undefined
+                    || ele.AccountPrivateKey! == undefined
+                    || ele.AsymmeticKey! == undefined
+                    || ele.AsymmeticKey.PublicKey! == undefined
+                    || ele.AsymmeticKey.PrivateKey! == undefined
+                    || ele.IsPublisher! == undefined
                 ) {
                     // throw error
                 }
-                if (ele.accountAddress != utils.computeAddr(ele.accountPrivateKey)) {
+                if (ele.AccountAddress != utils.computeAddr(ele.AccountPrivateKey)) {
                     // throw error
                 }
-                if (utils.Crypto.verifyKeyPair(ele.asymmeticKey.publicKey, ele.asymmeticKey.privateKey)) {
+                if (utils.Crypto.verifyKeyPair(ele.AsymmeticKey.PublicKey, ele.AsymmeticKey.PrivateKey)) {
                     // throw error
                 }
 
-                if (ele.accountAddress == file.loginAccountAddress!)
+                if (ele.AccountAddress == file.LoginAccountAddress!)
                     this._ethereumAccountIndex = this._accountInfos.length
-                let following: { addr: string, name: string }[] = []
-                if (Array.isArray(ele.following))
-                    ele.following.forEach(ele => {
-                        if (ele.address != undefined && ele.name != undefined)
+                let following: any[] = []
+                if (Array.isArray(ele.Following))
+                    ele.Following.forEach(ele => {
+                        if (ele.Address != undefined && ele.Name != undefined)
                             following.push({
-                                addr: ele.address,
-                                name: ele.name,
+                                addr: ele.Address,
+                                name: ele.Name,
+                                isSubscribing: ele.IsSubscribing,
                             })
                     }) 
                 let info: AccountInfo = {
-                    address: ele.accountAddress,
-                    accountKey: ele.accountPrivateKey,
+                    address: ele.AccountAddress,
+                    accountKey: ele.AccountPrivateKey,
                     asymKey: {
-                        pub: ele.asymmeticKey.public,
-                        pri: ele.asymmeticKey.private
+                        pub: ele.AsymmeticKey.Public,
+                        pri: ele.AsymmeticKey.Private
                     },
-                    isPublisher: ele.isPublisher,
-                    name: ele.name,
+                    isPublisher: ele.IsPublisher,
+                    name: ele.Name!,
                     following: following
                 }
                 this._accountInfos.push(info)
             })
     }
 
+    public checkLogin() {
+        if (this._ethereumAccountIndex == -1)
+            throw Error('Have not logined')
+    }
+
+    // getters of static contents
+
+    get ethereumUrl(): string { return this._ethereumUrl }
     get ethereumContracts(): { artemis: string, message: string } {
         return {
             artemis: this._ethereumContractArtemis,
             message: this._ethereumContractMessage,
         }
     }
-    get ethereumUrl(): string { return this._ethereumUrl }
-    get ethereumAccountList(): string[] {
-        let list: string[] = []
-        this._accountInfos.forEach(ele => list.push(ele.address))
+    get graphqlUrl(): string { return this._graphqlUrl }
+    get ethereumAccountList(): { addr: string, name: string | undefined }[] {
+        let list: { addr: string, name: string | undefined }[] = []
+        this._accountInfos.forEach(ele => list.push({
+            addr: ele.address,
+            name: ele.name,
+        }))
         return list
     }
-    get ethereumAddr(): string | undefined {
-        if (this._ethereumAccountIndex == -1)
-            return undefined
+
+    // getters and setters of login-account associated contents
+
+    get ethereumAddr(): string {
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].address
     }
-    get ethereumAccountPrivateKey(): string | undefined {
-        if (this._ethereumAccountIndex == -1)
-            return undefined
+    get ethereumAccountPrivateKey(): string {
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].accountKey
     }
-    get asymmeticKey(): { pub: string, pri: string } | undefined {
-        if (this._ethereumAccountIndex == -1)
-            return undefined
+    get asymmeticKey(): { pub: string, pri: string } {
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex]!.asymKey
     }
-    set asymmeticKey(keyPair: {pub: string, pri: string} | undefined) {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
-        if (keyPair == undefined || keyPair!.pub == undefined || keyPair!.pri == undefined) {
-            // throw error
-        }
+    set asymmeticKey(keyPair: {pub: string, pri: string}) {
+        this.checkLogin()
         this._accountInfos[this._ethereumAccountIndex].asymKey.pub = keyPair!.pub
         this._accountInfos[this._ethereumAccountIndex].asymKey.pri = keyPair!.pri
     }
     get name(): string | undefined {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].name
     }
-    set name(newName: string| undefined) {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
-        if (newName == undefined) {
+    set name(newName: string | undefined) {
+        this.checkLogin()
+        if (newName! == undefined) {
             // throw error
         }
         this._accountInfos[this._ethereumAccountIndex].name = newName!
     }
     get following(): { addr: string, name: string }[] {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].following
     }
-
     public isPublisher(): boolean {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
+        this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].isPublisher
     }
-
     public registerPublisher() {
-        if (this._ethereumAccountIndex == -1) {
-            // throw error
-        }
+        this.checkLogin()
         this._accountInfos[this._ethereumAccountIndex].isPublisher = true
     }
 
-    public follow(addr: string, name: string) {
-        const index = this._accountInfos[this._ethereumAccountIndex]
-            .following.findIndex(ele => ele.addr == addr)
-        if (index != -1)
-            return
-        this._accountInfos[this._ethereumAccountIndex].following.push({
-            addr: addr,
-            name: name,
+    // serialize state now to string
+    public serialize(): string {
+        let accounts: any[] = []
+        this._accountInfos.forEach(ele => {
+            let following: { Address: string, Name: string }[] = []
+            ele.following.forEach( ele => following.push({
+                Address: ele.addr,
+                Name: ele.name,
+            }))
+            const info = {
+                AccountAddress: ele.address,
+                AccountPrivateKey: ele.accountKey,
+                AsymmeticKey: {
+                    Public: ele.asymKey.pub,
+                    Private: ele.asymKey.pri,
+                },
+                IsPublisher: ele.isPublisher,
+                Name: ele.name,
+                Following: following,
+            }
+            accounts.push(info)
         })
+        let json = {
+            EthereumUrl: this._ethereumUrl,
+            ContractArtemis: this._ethereumContractArtemis,
+            ContractMessage: this._ethereumContractMessage,
+            GraphQLUrl: this._graphqlUrl,
+            LoginAccountAddress: this.ethereumAddr,
+            Accounts: accounts,
+        }
+        return JSON.stringify(json)
     }
 
-    public unfollow(addr: string) {
-        const index = this._accountInfos[this._ethereumAccountIndex]
-            .following.findIndex(ele => ele.addr == addr)
-        if (index == -1)
-            return
-        this._accountInfos[this._ethereumAccountIndex]
-            .following.splice(index)
-    }
+    // account operations
 
-    /* fn: addAccount
-     * use account private key and address to add a new account
-     */
     public addAccount(
         addr: string, accountKey: string, 
         keyPair: { publicKey: string, privateKey: string },
@@ -195,13 +214,8 @@ export class State {
             following: [],
         }
         this._accountInfos.push(info)
-        if (this._ethereumAccountIndex < 0)
-            this._ethereumAccountIndex = 0
     }
 
-    /* fn: switchAccount
-     * switch current account to another on the given address
-     */
     public switchAccount(addr: string) {
         let index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, do not switch
@@ -211,9 +225,6 @@ export class State {
         this._ethereumAccountIndex = index
     }
 
-    /* fn: removeAccount
-     * remove the account on the given address
-     */
     public removeAccount(addr: string) {
         let index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, remove nothing
@@ -229,44 +240,34 @@ export class State {
         this._accountInfos.splice(index)
     }
 
-    /* fn: logout
-     * set state as logout
-     */
     public logout() {
         this._ethereumAccountIndex = -1
     }
 
-    /* fn: serialize
-     * return serialized state for storage
-     */
-    public serialize(): string {
-        let accounts: any[] = []
-        this._accountInfos.forEach(ele => {
-            let following: { address: string, name: string }[] = []
-            ele.following.forEach( ele => following.push({
-                address: ele.addr,
-                name: ele.name,
-            }))
-            const info = {
-                accountAddress: ele.address,
-                accountPrivateKey: ele.accountKey,
-                asymmeticKey: {
-                    public: ele.asymKey.pub,
-                    private: ele.asymKey.pri,
-                },
-                isPublisher: ele.isPublisher,
-                name: ele.name,
-                following: following,
+    public follow(addr: string, name: string | undefined, isSubscribing: SubscribingStatus) {
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .following.findIndex(ele => ele.addr == addr)
+        if (index == -1) {
+            if (name! == undefined) {
+                // throw error
             }
-            accounts.push(info)
-        })
-        let json = {
-            contractArtemis: this._ethereumContractArtemis,
-            contractMessage: this._ethereumContractMessage,
-            ethereumUrl: this._ethereumUrl,
-            loginAccountAddress: this.ethereumAddr,
-            accounts: accounts,
+            this._accountInfos[this._ethereumAccountIndex].following.push({
+                addr: addr,
+                name: name!,
+                isSubscribing: isSubscribing,
+            })
         }
-        return JSON.stringify(json)
+        else
+            this._accountInfos[this._ethereumAccountIndex]
+                .following[index].isSubscribing = isSubscribing
+    }
+
+    public unfollow(addr: string) {
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .following.findIndex(ele => ele.addr == addr)
+        if (index == -1)
+            return
+        this._accountInfos[this._ethereumAccountIndex]
+            .following.splice(index)
     }
 }

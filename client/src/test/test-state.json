@@ -1,5 +1,6 @@
 {
-    "contractArtemis": "",
-    "contractMessage": "",
-    "ethereumUrl": "http://127.0.0.1:7545"
+    "EthereumUrl": "<your ethereum net url>",
+    "ContractArtemis": "<your artemis contract address>",
+    "ContractMessage": "<your message contract address>",
+    "GraphQLUrl": "<your graphql url>"
 }

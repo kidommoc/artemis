@@ -36,7 +36,7 @@ describe('Test account service', () => {
         expect(state.ethereumAddr).toEqual(addr0)
         await accountService.addAccount(account1PriKey)
 
-        addrs = state.ethereumAccountList
+        state.ethereumAccountList.forEach(ele => addrs.push(ele.addr))
         expect(addrs[0]).toEqual(addr0)
         expect(addrs[1]).toEqual(addr1)
     }, 120 * 1000) // 2mins timeout
@@ -46,13 +46,13 @@ describe('Test account service', () => {
         expect(state.ethereumAddr).toEqual(addrs[0])
     })
 
-    test('logout', async () => {
-        await accountService.logout()
+    test('logout', () => {
+        accountService.logout()
         expect(state.ethereumAddr).not.toBeDefined()
     })
 
-    test('login account1', async () => {
-        await accountService.login(addrs[1])
+    test('login account1', () => {
+        accountService.switchAccount(addrs[1])
         expect(state.ethereumAddr).toEqual(addrs[1])
     })
 
@@ -89,7 +89,7 @@ describe('Test account service', () => {
 
     test('follow', () => {
         accountService.switchAccount(addrs[1])
-        accountService.follow(addrs[0], 'account0')
+        accountService.follow(addrs[0])
         expect(state.following.findIndex(ele => ele.addr == addrs[0])).not.toEqual(-1)
     })
 

@@ -1,6 +1,6 @@
 import { Inject, Service } from 'typedi'
-import { State } from '@/main/State'
-import { ContractService } from '@/main/services/Contract'
+import { State, SubscribingStatus } from '@/main/State'
+import { ContractService, MsgCode } from '@/main/services/Contract'
 import { IPFSService } from '@/main/services/IPFS'
 import * as utils from '@/main/utils'
 
@@ -10,23 +10,32 @@ export class AccountService {
         @Inject('State') private _state: State,
         @Inject() private _contractService: ContractService,
         @Inject() private _ipfsService: IPFSService
-    ) {}
+    ) {
+        this.handleMessage()
+        setInterval(() => this.handleMessage(), 5 * 60 * 1000)
+    }
 
-    public async login(accountAddr: string) {
-        const list = this._state.ethereumAccountList
-        if (list.findIndex(ele => ele == accountAddr) == -1) {
+    private async admitSubscribing(addr: string, pubKey: string) {
+        const accountKey = this._state.ethereumAccountPrivateKey
+        if (accountKey == undefined) {
             // throw error
         }
-        await this.switchAccount(accountAddr)
-    }
-    
-    public async logout() {
-        this._state.logout()
-        await this._contractService.updateService()
+        const encKey = utils.Crypto.getSymEncKey(accountKey!)
+        const encrypted = utils.Crypto.asymEncrypt(encKey, pubKey)
+        await this._contractService.admitSubscribing(addr, encrypted)
     }
 
     public switchAccount(accountAddr: string) {
+        const list = this._state.ethereumAccountList
+        if (list.findIndex(ele => ele.addr == accountAddr) == -1) {
+            // throw error
+        }
         this._state.switchAccount(accountAddr)
+        this._contractService.updateService()
+    }
+
+    public logout() {
+        this._state.logout()
         this._contractService.updateService()
     }
 
@@ -38,7 +47,7 @@ export class AccountService {
         if (name != undefined)
             isPublisher = true
         this._state.addAccount(addr, accountKey, keyPair, isPublisher, name)
-        await this._contractService.updateService()
+        this.switchAccount(addr)
         await this._ipfsService.createUserDir(addr)
     }
 
@@ -57,8 +66,21 @@ export class AccountService {
         this._state.name = newName
     }
 
-    public follow(addr: string, name: string) {
-        this._state.follow(addr, name)
+    public async follow(addr: string) {
+        const name = await this._contractService.getPublisherName(addr)
+        if (name! == undefined) {
+            // throw error
+        }
+        this._state.follow(addr, name!, SubscribingStatus.NO)
+    }
+
+    public async subscribe(addr: string, months: number) {
+        const name = await this._contractService.getPublisherName(addr)
+        if (name! == undefined) {
+            // throw error
+        }
+        await this._contractService.subscribe(addr, months)
+        this._state.follow(addr, name!, SubscribingStatus.REQ)
     }
 
     public unfollow(addr: string) {
@@ -79,5 +101,30 @@ export class AccountService {
             privateKey: this._state.asymmeticKey!.pri,
         }
         utils.FSIO.write(path, JSON.stringify(file))
+    }
+
+    public async handleMessage() {
+        try {
+            this._state.checkLogin()
+        } catch (error) {
+            return
+        }
+        const hasMsg = await this._contractService.checkMessage()
+        if (!hasMsg)
+            return
+        const msgs = await this._contractService.fetchMessage()
+        for await (const msg of msgs) {
+            switch (msg.code) {
+                case MsgCode.SUB_REQ:
+                    await this.admitSubscribing(msg.from, msg.content)
+                    break
+                case MsgCode.SUB_RES:
+                    this._state.follow(msg.from, undefined, SubscribingStatus.YES)
+                    break
+                default:
+                    break
+            }
+        }
+        await this._contractService.clearMessage()
     }
 }

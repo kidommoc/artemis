@@ -117,11 +117,14 @@ export class ContractService {
                 from: result.msgSenders![i],
                 content: result.msgContents![i],
                 code: ((c: number): MsgCode => {
-                    if (c == 1)
-                        return MsgCode.SUB_REQ
-                    if (c == 2)
-                        return MsgCode.SUB_RES
-                    return MsgCode.UNKNOWN
+                    switch (c) {
+                        case 1:
+                            return MsgCode.SUB_REQ
+                        case 2:
+                            return MsgCode.SUB_RES
+                        default:
+                            return MsgCode.UNKNOWN
+                    }
                 })(result.msgCodes![i]),
             }
             msgs.push(msg)
@@ -267,9 +270,16 @@ export class ContractService {
         if (this._state.ethereumAddr == undefined) {
             // throw error
         }
-        // check
+        const balance = await this.getBalance()
+        const price = await this.getSubscribingPrice(publ)
+        const estimateGas = Number(ethers.utils.formatEther(await this._artemis!.estimateGas.subscribe(
+            publ, months, this._state.asymmeticKey!.pub,
+            { value: ethers.utils.parseEther((months * price).toString()) }
+        )))
+        if (balance < months * price + estimateGas) {
+            // throw error
+        }
         try {
-            const price = await this.getSubscribingPrice(publ)
             let tx = await this._artemis!.subscribe(
                 publ, months, this._state.asymmeticKey!.pub,
                 { value: ethers.utils.parseEther((months * price).toString()) }
@@ -292,7 +302,7 @@ export class ContractService {
     }
 
     public async getArticleInfo(fileLoc: string):
-        Promise<{ authorAddr: string, title: string, author: string, reqSubscribing: boolean }>
+        Promise<{ authorAddr: string, title: string, author: string, date: Date, reqSubscribing: boolean }>
     {
         if (this._state.ethereumAddr == undefined) {
             // throw error
@@ -303,6 +313,7 @@ export class ContractService {
             authorAddr: result.authorAddr,
             title: result.title,
             author: result.author,
+            date: new Date(result.date),
             reqSubscribing: result.reqSubscribing,
         }
     }

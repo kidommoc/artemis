@@ -7,3 +7,7 @@ export { FSIO } from '@/main/utils/FSIO'
 export function computeAddr(accountKey: string): string {
     return ethersUtils.computeAddress(accountKey)
 }
+
+export function checksumAddr(addr: string): string {
+    return ethersUtils.getAddress(addr)
+}

@@ -3,6 +3,11 @@ import * as crypto from 'node:crypto'
 export const symmeticAlgorithm = 'aes-256-gcm'
 
 export class Crypto {
+    public static getSymEncKey(accountPriKey: string): string {
+        return crypto.createHash('sha256')
+            .update(accountPriKey).digest('hex')
+            .substring(0, 64)
+    }
 
     public static symEncrypt(data: Buffer, ipfsAddr: string, accountPriKey: string)
         : { encrypted: Buffer, encKey: string }
@@ -10,9 +15,7 @@ export class Crypto {
         const iv = crypto.createHash('sha256')
             .update(ipfsAddr).digest('hex')
             .substring(0, 32)
-        const key = crypto.createHash('sha256')
-            .update(accountPriKey).digest('hex')
-            .substring(0, 64)
+        const key = Crypto.getSymEncKey(accountPriKey)
         let cipher = crypto.createCipheriv(
             symmeticAlgorithm,
             Buffer.from(key, 'hex'),
