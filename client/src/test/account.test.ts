@@ -9,32 +9,34 @@ import { State } from '../main/State'
 import { AccountService } from '../main/services/Account'
 import { ContractService } from '../main/services/Contract'
 
-const account0PriKey = '0xb3f597447ec2c36bbbf6ac65c9bf28428b0b9423fa28a26cd7a262dd4b4e147d'
-const account1PriKey = '0x03efea105c6494e60a30ce57062cb21d95e037c7500143e8df514f4477fc1b0a'
 var state: State
 var ipfsNode
 var accountService: AccountService
 var contractService: ContractService
 var addrs: string[]
 
+beforeAll(async () => {
+    ipfsNode = await ipfs.create()
+    Container.set('IPFSNode', ipfsNode)
+    const file = utils.FSIO.read('./src/test/test-state.json')
+    state = new State(JSON.parse(file))
+    Container.set('State', state)
+}, 120 * 1000)
+
 describe('Test account service', () => {
     beforeAll(async () => {
-        const file = utils.FSIO.read('./src/test/test-state.json')
-        state = new State(JSON.parse(file))
-        Container.set('State', state)
-        ipfsNode = await ipfs.create()
-        Container.set('IPFSNode', ipfsNode)
         contractService = Container.get(ContractService)
         accountService = Container.get(AccountService)
     })
 
     test('add account0 and account1', async () => {
+        const accounts: string[] = JSON.parse(utils.FSIO.read('./src/test/accounts.json'))
         expect(state.ethereumAddr).not.toBeDefined()
-        const addr0 = ethersUtils.computeAddress(account0PriKey)
-        const addr1 = ethersUtils.computeAddress(account1PriKey)
-        await accountService.addAccount(account0PriKey)
+        const addr0 = ethersUtils.computeAddress(accounts[0])
+        const addr1 = ethersUtils.computeAddress(accounts[1])
+        await accountService.addAccount(accounts[0])
         expect(state.ethereumAddr).toEqual(addr0)
-        await accountService.addAccount(account1PriKey)
+        await accountService.addAccount(accounts[1])
 
         state.ethereumAccountList.forEach(ele => addrs.push(ele.addr))
         expect(addrs[0]).toEqual(addr0)
@@ -115,6 +117,9 @@ describe('Test account service', () => {
             list.push(file.name)
         for (let i = 0; i < list.length; ++i)
             await ipfsNode.files.rm(`/${list[i]}`, { recursive: true })
-        await ipfsNode.stop()
     }, 120 * 1000)
 })
+
+afterAll(async () => {
+    await ipfsNode.stop()
+}, 120 * 1000)

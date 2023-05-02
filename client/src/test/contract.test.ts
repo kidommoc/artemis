@@ -7,8 +7,6 @@ import { AccountService } from '../main/services/Account'
 import { ContractService, MsgCode as ContractMsgCode } from '../main/services/Contract'
 
 // local test accounts
-const account0PriKey = '0xb3f597447ec2c36bbbf6ac65c9bf28428b0b9423fa28a26cd7a262dd4b4e147d'
-const account1PriKey = '0x03efea105c6494e60a30ce57062cb21d95e037c7500143e8df514f4477fc1b0a'
 const freeArticleAddr = 'TEST_ADDR_FREETOACCESS_IN_BASE_58'
 const paidArticleAddr = 'TEST_ADDR_REQSUBSCRIBE_IN_BASE_58'
 let state: State
@@ -19,32 +17,36 @@ let addrs: string[] = []
 let uploadTime = new Date()
 let admitTxHash: string
 
+beforeAll(async () => {
+    const ipfs = await import('ipfs-core')
+    const file = utils.FSIO.read('./src/test/test-state.json')
+    state = new State(JSON.parse(file))
+    Container.set('State', state)
+    ipfsNode = await ipfs.create()
+    Container.set('IPFSNode', ipfsNode)
+}, 120 * 1000)
+
 describe('Test contract service:', () => {
     beforeAll(async () => {
-        const ipfs = await import('ipfs-core')
-        const file = utils.FSIO.read('./src/test/test-state.json')
-        state = new State(JSON.parse(file))
-        Container.set('State', state)
-        ipfsNode = await ipfs.create()
-        Container.set('IPFSNode', ipfsNode)
         accountService = Container.get(AccountService)
         contractService = Container.get(ContractService)
     }, 120 * 1000)
 
     test('login account0 and account1', async () => {
+        const accounts: string[] = JSON.parse(utils.FSIO.read('./src/test/accounts.json'))
         // test adding account
-        await accountService.addAccount(account0PriKey)
-        await accountService.addAccount(account1PriKey)
+        await accountService.addAccount(accounts[0])
+        await accountService.addAccount(accounts[1])
         state.ethereumAccountList.forEach(ele => addrs.push(ele.addr))
 
         // check list and current account
-        expect(addrs[0]).toEqual(ethers.utils.computeAddress(account0PriKey))
-        expect(addrs[1]).toEqual(ethers.utils.computeAddress(account1PriKey))
-        expect(state.ethereumAddr).toEqual(ethers.utils.computeAddress(account0PriKey))
+        expect(addrs[0]).toEqual(ethers.utils.computeAddress(accounts[0]))
+        expect(addrs[1]).toEqual(ethers.utils.computeAddress(accounts[1]))
+        expect(state.ethereumAddr).toEqual(ethers.utils.computeAddress(accounts[0]))
 
         // test switching account
         accountService.switchAccount(addrs[1])
-        expect(state.ethereumAddr).toEqual(ethers.utils.computeAddress(account1PriKey))
+        expect(state.ethereumAddr).toEqual(ethers.utils.computeAddress(accounts[1]))
     }, 120 * 1000)
 
     test('account0: register as publisher', async () => {
@@ -187,7 +189,10 @@ describe('Test contract service:', () => {
     afterAll(async () => {
         accountService.switchAccount(addrs[0])
         await contractService.removeArticle(paidArticleAddr)
-        await ipfsNode.stop()
-    }, 120 * 10000)
+    })
 
 })
+
+afterAll(async () => {
+    await ipfsNode.stop()
+}, 120 * 1000)
