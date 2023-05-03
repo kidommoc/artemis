@@ -148,6 +148,8 @@ contract Artemis {
         require(a.authorAddr != address(0), "article doesn't exist!");
         if (!a.requireSubscribing)
             return (true, "");
+        if (a.authorAddr == msg.sender)
+            return (true, "ME");
         PublisherInfo storage publInfo = _publs[a.authorAddr];
         if (publInfo.subscribers[msg.sender].time < block.timestamp)
             return (false, "");

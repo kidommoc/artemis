@@ -134,6 +134,14 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         }
     })
 
+    it('should access the paid article by account0', async () => {
+        const instA = await Artemis.deployed()
+        const account0 = accounts[0]
+        const result = await instA.accessArticle.call(paidArticleCode, { from: account0 })
+        assert.equal(result.permission, true, 'permission error')
+        assert.equal(result.encKey, 'ME', 'encrypt key error')
+    })
+
     it('should not access the paid article by account1', async () => {
         const instA = await Artemis.deployed()
         const account1 = accounts[1]

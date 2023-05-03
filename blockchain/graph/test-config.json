@@ -1,9 +1,9 @@
 {
     "EthereumUrl": "http://127.0.0.1:7545",
-    "ContractAddr": "",
+    "ContractAddr": "<your contract address>",
     "Accounts": [
-        "0x29dd746733502b3134c5dc9051dc8c7dd0338beb2501187832cfb1ae6ba951d4",
-        "0xa18cab23a0a1d9288442f74df53f5da598e132708f6cef46cfe293d99f8924e9",
-        "0x57a79ddc9ac5e8fd86821d06c8693600f0ef2a3cef87005fac3ea6abcabe9fa4"
+        "<your local test account private key>",
+        "<your local test account private key>",
+        "<your local test account private key>"
     ]
 }
