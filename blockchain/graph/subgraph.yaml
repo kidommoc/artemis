@@ -11,9 +11,9 @@ dataSources:
     network: mainnet
     source:
       # local contract addr
-      address: ''
+      address: '<your contract address>'
       abi: Artemis
-      startBlock: 6
+      startBlock: 0
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
