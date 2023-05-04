@@ -49,7 +49,7 @@ describe('Test IPFS service:', () => {
     })
 
     test('create user directory', async () => {
-        await ipfsService.createUserDir(state.ethereumAddr!)
+        await ipfsService.createUserDir(state.ethereumAddr)
     })
 
     test('add file', async () => {
@@ -76,17 +76,21 @@ describe('Test IPFS service:', () => {
     })
 
     afterAll(async () => {
-        const CID = (await import('multiformats')).CID
-        let list: string[] = []
+        let list: any[] = []
         for await (const file of ipfsNode.files.ls('/'))
             list.push(file.name)
-        for (let i = 0; i < list.length; ++i)
-            await ipfsNode.files.rm(`/${list[i]}`, { recursive: true })
+        for (const filename of list)
+            try {
+                await ipfsNode.files.rm(`/${filename}`, { recursive: true })
+            } catch (error) { }
 
+        list = []
         for await (const { cid } of ipfsNode.pin.ls('/'))
             list.push(cid)
-        for (let i = 0; i < list.length; ++i)
-            await ipfsNode.pin.rm(CID.parse(cid))
+        for (const cid of list)
+            try {
+                await ipfsNode.pin.rm(cid)
+            } catch (error) { }
         await ipfsNode.stop()
     })
 })

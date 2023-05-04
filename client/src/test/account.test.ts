@@ -9,11 +9,11 @@ import { State } from '../main/State'
 import { AccountService } from '../main/services/Account'
 import { ContractService } from '../main/services/Contract'
 
-var state: State
-var ipfsNode
-var accountService: AccountService
-var contractService: ContractService
-var addrs: string[]
+let state: State
+let ipfsNode
+let accountService: AccountService
+let contractService: ContractService
+let addrs: string[]
 
 beforeAll(async () => {
     ipfsNode = await ipfs.create()
@@ -38,7 +38,8 @@ describe('Test account service', () => {
         expect(state.ethereumAddr).toEqual(addr0)
         await accountService.addAccount(accounts[1])
 
-        state.ethereumAccountList.forEach(ele => addrs.push(ele.addr))
+        for (const ele of state.ethereumAccountList)
+            addrs.push(ele.addr)
         expect(addrs[0]).toEqual(addr0)
         expect(addrs[1]).toEqual(addr1)
     }, 120 * 1000) // 2mins timeout
@@ -121,5 +122,6 @@ describe('Test account service', () => {
 })
 
 afterAll(async () => {
+    accountService.stopMessageHandling()
     await ipfsNode.stop()
 }, 120 * 1000)

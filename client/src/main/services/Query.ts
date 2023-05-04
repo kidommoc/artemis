@@ -33,10 +33,11 @@ export class QueryService {
         let result: AuthorInfo[] = []
         if (!Array.isArray(data))
             return result
-        data.forEach(ele => result.push({
-            addr: utils.checksumAddr(ele.id.toString()),
-            name: ele.name,
-        }))
+        for (const ele of data)
+            result.push({
+                addr: utils.checksumAddr(ele.id.toString()),
+                name: ele.name,
+            })
         return result
     }
 
@@ -44,13 +45,14 @@ export class QueryService {
         let result: ArticleInfo[] = []
         if (!Array.isArray(data))
             return result
-        data.forEach(ele => result.push({
-            cid: ele.id.toString(),
-            title: ele.title,
-            author: this.toAuthorInfos([ele.author])[0],
-            date: new Date(Number(ele.date) * 1000),
-            reqSubscribing: ele.reqSubscribing,
-        }))
+        for (const ele of data)
+            result.push({
+                cid: ele.id.toString(),
+                title: ele.title,
+                author: this.toAuthorInfos([ele.author])[0],
+                date: new Date(Number(ele.date) * 1000),
+                reqSubscribing: ele.reqSubscribing,
+            })
         return result
     }
 
@@ -88,9 +90,8 @@ export class QueryService {
         const startTime = Math.floor(start.getTime() / 1000)
         console.log(`end: ${endTime}, ${end}\nstart: ${startTime}, ${start}`)
         let authors: any[] = []
-        this._state.following.forEach(ele =>
+        for (const ele of this._state.following)
             authors.push({ author_: { id: ele.addr.toLowerCase() }})
-        )
         const QUERY = QUERIES.FETCH_TODAY(
             JSON.stringify(authors).replace(/"([^"]+)":/g, '$1:')
         )

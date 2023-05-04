@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto'
 
-export const symmeticAlgorithm = 'aes-256-gcm'
+export const symmeticAlgorithm = 'aes-256-cbc'
 
 export class Crypto {
     public static getSymEncKey(accountPriKey: string): string {
@@ -9,38 +9,29 @@ export class Crypto {
             .substring(0, 64)
     }
 
-    public static symEncrypt(data: Buffer, ipfsAddr: string, accountPriKey: string)
-        : { encrypted: Buffer, encKey: string }
+    public static symEncrypt(data: Buffer, publAddr: string, encryptKey: string)
+        : Buffer
     {
         const iv = crypto.createHash('sha256')
-            .update(ipfsAddr).digest('hex')
+            .update(publAddr).digest('hex')
             .substring(0, 32)
-        const key = Crypto.getSymEncKey(accountPriKey)
         let cipher = crypto.createCipheriv(
             symmeticAlgorithm,
-            Buffer.from(key, 'hex'),
+            Buffer.from(encryptKey, 'hex'),
             Buffer.from(iv, 'hex'),
         )
-        return {
-            encrypted: Buffer.concat([cipher.update(data), cipher.final()]),
-            encKey: key + '@@' + cipher.getAuthTag().toString('hex'),
-        }
+        return Buffer.concat([cipher.update(data), cipher.final()])
     }
 
-    public static symDecrypt(buffer: Buffer, ipfsAddr: string, encryptKey: string): Buffer {
-        const meta = encryptKey.split('@@')
-        if (meta.length < 2) {
-            // throw error
-        }
+    public static symDecrypt(buffer: Buffer, publAddr: string, encryptKey: string): Buffer {
         const iv = crypto.createHash('sha256')
-            .update(ipfsAddr).digest('hex')
+            .update(publAddr).digest('hex')
             .substring(0, 32)
         let decipher = crypto.createDecipheriv(
             symmeticAlgorithm,
-            Buffer.from(meta[0], 'hex'),
+            Buffer.from(encryptKey, 'hex'),
             Buffer.from(iv, 'hex'),
         )
-        decipher.setAuthTag(Buffer.from(meta[1], 'hex'))
         return Buffer.concat([decipher.update(buffer), decipher.final()])
     }
 

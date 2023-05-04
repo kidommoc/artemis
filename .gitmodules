@@ -1,0 +1,3 @@
+[submodule "client/dependencies/md2h5"]
+	path = client/dependencies/md2h5
+	url = git@github.com:kidommoc/md2h5.git

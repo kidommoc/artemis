@@ -1,6 +1,6 @@
 {
   "name": "artemis",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "a blockchain-and-ipfs-based media distributing system",
   "main": "./dist/main/main.js",
   "author": "kidommoc",
@@ -25,7 +25,9 @@
     "@urql/core": "^4.0.4",
     "ethers": "^5.7.2",
     "ipfs-core": "^0.18.0",
+    "md2h5": "file:dependencies/md2h5",
     "multiformats": "^11.0.2",
+    "node-html-parser": "^6.1.5",
     "reflect-metadata": "^0.1.13",
     "typedi": "^0.10.0"
   },

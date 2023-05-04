@@ -48,7 +48,7 @@ export class State {
         this._ethereumAccountIndex = -1
 
         if (file.Accounts != undefined)
-            file.Accounts!.forEach(ele => {
+            for (const ele of file.Accounts!) {
                 // empty/error check
                 if (ele.AccountAddress! == undefined
                     || ele.AccountPrivateKey! == undefined
@@ -70,14 +70,17 @@ export class State {
                     this._ethereumAccountIndex = this._accountInfos.length
                 let following: any[] = []
                 if (Array.isArray(ele.Following))
-                    ele.Following.forEach(ele => {
-                        if (ele.Address != undefined && ele.Name != undefined)
+                    for (const follow of ele.Following!) {
+                        if (follow.Address != undefined
+                            && follow.Name != undefined
+                            && follow.isSubscribing != undefined
+                        )
                             following.push({
-                                addr: ele.Address,
-                                name: ele.Name,
-                                isSubscribing: ele.IsSubscribing,
+                                addr: follow.Address,
+                                name: follow.Name,
+                                isSubscribing: follow.IsSubscribing,
                             })
-                    }) 
+                    } 
                 let info: AccountInfo = {
                     address: ele.AccountAddress,
                     accountKey: ele.AccountPrivateKey,
@@ -90,7 +93,7 @@ export class State {
                     following: following
                 }
                 this._accountInfos.push(info)
-            })
+            }
     }
 
     public checkLogin() {
@@ -110,10 +113,11 @@ export class State {
     get graphqlUrl(): string { return this._graphqlUrl }
     get ethereumAccountList(): { addr: string, name: string | undefined }[] {
         let list: { addr: string, name: string | undefined }[] = []
-        this._accountInfos.forEach(ele => list.push({
-            addr: ele.address,
-            name: ele.name,
-        }))
+        for (const ele of this._accountInfos)
+            list.push({
+                addr: ele.address,
+                name: ele.name,
+            })
         return list
     }
 
@@ -163,12 +167,14 @@ export class State {
     // serialize state now to string
     public serialize(): string {
         let accounts: any[] = []
-        this._accountInfos.forEach(ele => {
-            let following: { Address: string, Name: string }[] = []
-            ele.following.forEach( ele => following.push({
-                Address: ele.addr,
-                Name: ele.name,
-            }))
+        for (const ele of this._accountInfos) {
+            let following: any[] = []
+            for (const follow of ele.following)
+                following.push({
+                    Address: follow.addr,
+                    Name: follow.name,
+                    IsSubscribing: follow.isSubscribing,
+                })
             const info = {
                 AccountAddress: ele.address,
                 AccountPrivateKey: ele.accountKey,
@@ -181,7 +187,7 @@ export class State {
                 Following: following,
             }
             accounts.push(info)
-        })
+        }
         let json = {
             EthereumUrl: this._ethereumUrl,
             ContractArtemis: this._ethereumContractArtemis,
@@ -245,12 +251,12 @@ export class State {
     }
 
     public follow(addr: string, name: string | undefined, isSubscribing: SubscribingStatus) {
+        this.checkLogin()
         const index = this._accountInfos[this._ethereumAccountIndex]
             .following.findIndex(ele => ele.addr == addr)
         if (index == -1) {
-            if (name! == undefined) {
-                // throw error
-            }
+            if (name == undefined)
+                throw new Error('Neea a name for publisher!')
             this._accountInfos[this._ethereumAccountIndex].following.push({
                 addr: addr,
                 name: name!,
@@ -263,6 +269,7 @@ export class State {
     }
 
     public unfollow(addr: string) {
+        this.checkLogin()
         const index = this._accountInfos[this._ethereumAccountIndex]
             .following.findIndex(ele => ele.addr == addr)
         if (index == -1)

@@ -137,5 +137,6 @@ describe('Test query service:', () => {
 })
 
 afterAll(async () => {
+    accountService.stopMessageHandling()
     await ipfsNode.stop()
 }, 120 * 1000)

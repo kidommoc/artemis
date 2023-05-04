@@ -9,6 +9,10 @@ export class FSIO {
         return fs.readFileSync(resolve(path), 'utf-8')
     }
 
+    public static readRaw(path: string): Buffer {
+        return fs.readFileSync(resolve(path))
+    }
+
     public static write(path: string, content: string) {
         fs.writeFileSync(resolve(path), content, { encoding: 'utf-8' })
     }

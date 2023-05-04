@@ -37,7 +37,8 @@ describe('Test contract service:', () => {
         // test adding account
         await accountService.addAccount(accounts[0])
         await accountService.addAccount(accounts[1])
-        state.ethereumAccountList.forEach(ele => addrs.push(ele.addr))
+        for (const ele of state.ethereumAccountList)
+            addrs.push(ele.addr)
 
         // check list and current account
         expect(addrs[0]).toEqual(ethers.utils.computeAddress(accounts[0]))
@@ -76,7 +77,7 @@ describe('Test contract service:', () => {
         const publisherPubKey = await contractService.getPublisherPubKey(addrs[0])
         expect(subscribingPrice).toBeCloseTo(0.05, 4)
         accountService.switchAccount(addrs[0])
-        expect(publisherPubKey).toEqual(state.asymmeticKey!.pub)
+        expect(publisherPubKey).toEqual(state.asymmeticKey.pub)
     })
 
     test('account0: upload a free article', async () => {
@@ -151,7 +152,7 @@ describe('Test contract service:', () => {
         expect(msgs[0].from).toEqual(addrs[1])
         expect(msgs[0].code).toEqual(ContractMsgCode.SUB_REQ)
         accountService.switchAccount(addrs[1])
-        expect(msgs[0].content).toEqual(state.asymmeticKey!.pub)
+        expect(msgs[0].content).toEqual(state.asymmeticKey.pub)
 
         // test clearing message
         accountService.switchAccount(addrs[0])
@@ -175,8 +176,9 @@ describe('Test contract service:', () => {
     test('account1: check subscribing time to account0', async () => {
         accountService.switchAccount(addrs[1])
         const timeTo = await contractService.getSubscribingTime(addrs[0])
+        expect(timeTo).toBeDefined()
         const timeFrom = await contractService.getTransactionTime(admitTxHash)
-        expect(timeTo.getTime()).toEqual(timeFrom.getTime() + 31 * 86400)
+        expect(timeTo!.getTime()).toEqual(timeFrom.getTime() + 31 * 86400)
     })
 
     test('account1: be able to access paid article', async () => {
@@ -194,5 +196,6 @@ describe('Test contract service:', () => {
 })
 
 afterAll(async () => {
+    accountService.stopMessageHandling()
     await ipfsNode.stop()
 }, 120 * 1000)

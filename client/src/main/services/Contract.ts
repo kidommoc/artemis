@@ -133,7 +133,7 @@ export class ContractService {
     public async registerPublisher(name: string, price: number): Promise<string> {
         try {
             let tx = await this._artemis!.registerPublisher(
-                name, this._state.asymmeticKey!.pub,
+                name, this._state.asymmeticKey.pub,
                 ethers.utils.parseEther(price.toString())
             )
             await tx.wait()
@@ -205,23 +205,25 @@ export class ContractService {
         const balance = await this.getBalance()
         const price = await this.getSubscribingPrice(publ)
         const estimateGas = Number(ethers.utils.formatEther(await this._artemis!.estimateGas.subscribe(
-            publ, months, this._state.asymmeticKey!.pub,
+            publ, months, this._state.asymmeticKey.pub,
             { value: ethers.utils.parseEther((months * price).toString()) }
         )))
         if (balance < months * price + estimateGas)
             throw new Error('Insufficient balance!')
         let tx = await this._artemis!.subscribe(
-            publ, months, this._state.asymmeticKey!.pub,
+            publ, months, this._state.asymmeticKey.pub,
             { value: ethers.utils.parseEther((months * price).toString()) }
         )
         await tx.wait()
         return tx.hash
     }
 
-    public async getSubscribingTime(publ: string): Promise<Date> {
+    public async getSubscribingTime(publ: string): Promise<Date | undefined> {
         const result = await this._artemis!.getSubscribingTime(publ)
+        if (result == 0)
+            return undefined
         // check
-        return new Date(Number(result))
+        return new Date(Number(result * 1000))
     }
 
     public async getArticleInfo(fileLoc: string):

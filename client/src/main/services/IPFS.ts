@@ -21,8 +21,9 @@ export class IPFSService {
             this._dlist.splice(index)
     }
 
+    // not tested yet!
     private async clearPins() {
-        const expired = new Date().getTime() + 30 * 86400
+        const expired = new Date().getTime() - 30 * 86400 * 1000
         for (let i = 0; i < this._dlist.length; ++i)
             if (this._dlist[i].date.getTime() < expired) {
                 await this.removePin(this._dlist[i].cid)
@@ -31,7 +32,7 @@ export class IPFSService {
             }
     }
 
-    // havn't been tested!
+    // not tested yet!
     private async downloadFile(cid: string) {
         const CID = (await import('multiformats')).CID
         this.clearPins()
@@ -56,9 +57,9 @@ export class IPFSService {
 
     public async listFiles(): Promise<{ title: string, cid: string }[]> {
         let list: { cid: string, title: string }[] = []
-        for await (const file of this._node.files.ls(`/${this._state.ethereumAddr!}`)) {
+        for await (const file of this._node.files.ls(`/${this._state.ethereumAddr}`)) {
             let chunks: any[] = []
-            for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr!}/${file.name}`))
+            for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr}/${file.name}`))
                 chunks.push(chunk)
             list.push({
                 cid: Buffer.concat(chunks).toString('utf-8'),
@@ -70,7 +71,7 @@ export class IPFSService {
 
     public async addFile(title: string, content: Buffer): Promise<string> {
         const name = `${title}.artemis` 
-        const path = `/${this._state.ethereumAddr!}/${name}`
+        const path = `/${this._state.ethereumAddr}/${name}`
         const { cid } = await this._node.add({
             path: `/${name}`,
             content: content,
@@ -79,14 +80,16 @@ export class IPFSService {
         return cid.toString()
     }
 
-    public async removeFile(title: string) {
-        const path = `/${this._state.ethereumAddr!}/${title}.artemis`
+    // return cid
+    public async removeFile(title: string): Promise<string> {
+        const path = `/${this._state.ethereumAddr}/${title}.artemis`
         let chunks: any[] = []
-        for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr!}/${title}.artemis`))
+        for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr}/${title}.artemis`))
             chunks.push(chunk)
         const cid = Buffer.concat(chunks).toString('utf-8')
         await this.removePin(cid)
         await this._node.files.rm(path)
+        return cid
     }
 
     // ===== reader files =====

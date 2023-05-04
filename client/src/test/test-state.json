@@ -1,6 +1,6 @@
 {
     "EthereumUrl": "http://127.0.0.1:7545",
-    "ContractArtemis": "0x76C22020d0221D1024283342D2b77140af5bbc95",
-    "ContractMessage": "0x66528E546Db0A353CA82C529444C094a14D42b30",
+    "ContractArtemis": "<your test artemis contract address>",
+    "ContractMessage": "<your test message contract address>",
     "GraphQLUrl": "http://127.0.0.1:8000/subgraphs/name/kidommoc/artemis"
 }

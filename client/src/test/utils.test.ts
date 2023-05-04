@@ -2,8 +2,8 @@ import * as fs from 'node:fs'
 import * as utils from '../main/utils'
 
 const accountKey = '0x4e49300b828d8adcf7a10c26c773d72928c93a7e91d2c7cf3bcae126bf91f966'
+const accountAddr = utils.computeAddr(accountKey)
 const data = 'Hello, world!'
-const ipfsAddr = 'TESTIPFSADDROFDATA'
 let asymKey: { publicKey: string, privateKey: string }
 
 describe('Test crypto util:', () => {
@@ -14,11 +14,11 @@ describe('Test crypto util:', () => {
     test('symmetic encryption and decryption', () => {
         const encryptResult = utils.Crypto.symEncrypt(
             Buffer.from(data, 'utf-8'),
-            ipfsAddr, accountKey
+            accountAddr, accountKey
         )
         const decryptResult = utils.Crypto.symDecrypt(
             encryptResult.encrypted,
-            ipfsAddr, encryptResult.encKey
+            accountAddr, encryptResult.encKey
         )
         expect(decryptResult).toEqual(Buffer.from(data, 'utf-8'))
     })

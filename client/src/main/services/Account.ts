@@ -6,18 +6,19 @@ import * as utils from '@/main/utils'
 
 @Service()
 export class AccountService {
+    private _timer: ReturnType<typeof setInterval>
     constructor(
         @Inject('State') private _state: State,
         @Inject() private _contractService: ContractService,
         @Inject() private _ipfsService: IPFSService
     ) {
         this.handleMessage()
-        setInterval(() => this.handleMessage(), 5 * 60 * 1000)
+        this._timer = setInterval(() => this.handleMessage(), 5 * 60 * 1000)
     }
 
     private async admitSubscribing(addr: string, pubKey: string) {
         const accountKey = this._state.ethereumAccountPrivateKey
-        const encKey = utils.Crypto.getSymEncKey(accountKey!)
+        const encKey = utils.Crypto.getSymEncKey(accountKey)
         const encrypted = utils.Crypto.asymEncrypt(encKey, pubKey)
         await this._contractService.admitSubscribing(addr, encrypted)
     }
@@ -29,7 +30,7 @@ export class AccountService {
         }
         this._state.switchAccount(accountAddr)
         this._contractService.updateService()
-        this.handleMessage()
+        // this.handleMessage()
     }
 
     public logout() {
@@ -76,7 +77,7 @@ export class AccountService {
 
     public async subscribe(addr: string, months: number) {
         const name = await this._contractService.getPublisherName(addr)
-        if (name! == undefined)
+        if (name == undefined)
             throw new Error('Not a publisher!')
         await this._contractService.subscribe(addr, months)
         this._state.follow(addr, name!, SubscribingStatus.REQ)
@@ -89,8 +90,8 @@ export class AccountService {
 
     public exportAsymKeys(path: string) {
         const file = {
-            publicKey: this._state.asymmeticKey!.pub,
-            privateKey: this._state.asymmeticKey!.pri,
+            publicKey: this._state.asymmeticKey.pub,
+            privateKey: this._state.asymmeticKey.pri,
         }
         utils.FSIO.write(path, JSON.stringify(file))
     }
@@ -111,12 +112,18 @@ export class AccountService {
                     await this.admitSubscribing(msg.from, msg.content)
                     break
                 case MsgCode.SUB_RES:
-                    this._state.follow(msg.from, undefined, SubscribingStatus.YES)
+                    try {
+                        this._state.follow(msg.from, undefined, SubscribingStatus.YES)
+                    } catch (error) { }
                     break
                 default:
                     break
             }
         }
         await this._contractService.clearMessage()
+    }
+
+    public stopMessageHandling() {
+        clearInterval(this._timer)
     }
 }
