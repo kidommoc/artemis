@@ -1,8 +1,10 @@
 import 'reflect-metadata'
-import { app, shell, BrowserWindow } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// import icon from '../../resources/icon.png?asset'
+
+import loader from '@/main/loader'
+import { handles } from '@/main/routes'
 
 function createWindow(): void {
     const mainWindow = new BrowserWindow({
@@ -10,7 +12,6 @@ function createWindow(): void {
         height: 670,
         show: false,
         autoHideMenuBar: true,
-        //...(process.platform === 'linux' ? { icon } : {}),
         webPreferences: {
           preload: join(__dirname, '../preload/index.js'),
           sandbox: false
@@ -38,7 +39,10 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    await loader()
+    for (const [signal, handler] of handles.entries())
+        ipcMain.handle(signal, handler)
 
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.kidommoc')
@@ -62,7 +66,7 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
