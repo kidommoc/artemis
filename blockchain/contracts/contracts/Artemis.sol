@@ -110,7 +110,10 @@ contract Artemis {
 
     function getSubscribingTime(address publ) public view returns (uint256 time) {
         require(publ != address(0), "empty publisher address!");
-        return _publs[publ].subscribers[msg.sender].time;
+        uint256 t = _publs[publ].subscribers[msg.sender].time;
+        if (t < block.timestamp)
+            return 0;
+        return t;
     }
 
     function uploadArticle(string calldata file, string calldata title, bool reqSubscribing) public {
