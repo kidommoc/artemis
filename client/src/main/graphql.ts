@@ -35,7 +35,7 @@ query FetchAuthor($id: Bytes!) {
     }
 }`
 
-export const FETCH_TODAY = (authors): string => `
+export const FETCH_UPDATE = (authors): string => `
 query FetchToday($start: BigInt!, $end: BigInt!) {
     artemisArticles(orderBy: date, orderDirection: desc,
         where: { and: [

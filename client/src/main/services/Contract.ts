@@ -19,11 +19,6 @@ export class ContractService {
     private _artemis: ethers.Contract | null
     private _message: ethers.Contract | null
 
-    /* constructor
-     * use State single instance (from DI) to init
-     * if account not specified, keeps related fields null
-     * call updateService() once decided
-     */
     constructor (@Inject('State') private _state: State) {
         this._provider = new ethers.providers.JsonRpcProvider(this._state.ethereumUrl)
         this._wallet = null
@@ -32,9 +27,6 @@ export class ContractService {
         this.updateService()
     }
 
-    /* fn: updateService
-     * called when loging-in or switching account
-     */
     public updateService() {
         try {
             const privateKey = this._state.ethereumAccountPrivateKey
@@ -51,12 +43,9 @@ export class ContractService {
 
     // ====== FOR BOTH ======
 
-    /* fn: getBalance
-     * query blockchain for balance of current account
-     */
+    // return price in ether
     public async getBalance(): Promise<number> {
         const result = await this._wallet!.getBalance()
-        // check
         return Number(ethers.utils.formatEther(result))
     }
 
@@ -69,9 +58,8 @@ export class ContractService {
     /* functions below are all contract interface wrappers */
 
     public async getPublisherName(addr: string): Promise<string | undefined> {
-        let artemis = new ethers.Contract(this._state.ethereumContracts.artemis, abiArtemis, this._provider)
+        const artemis = new ethers.Contract(this._state.ethereumContracts.artemis, abiArtemis, this._provider)
         const result = await artemis.getPublisherName(addr)
-        // const result = await this._artemis!.getPublisherName(addr)
         if (result.length == 0)
             return undefined
         return result
@@ -95,7 +83,7 @@ export class ContractService {
         ) {
             // throw error
         }
-        let msgs: { from: string, code: MsgCode, content: string }[] = []
+        const msgs: { from: string, code: MsgCode, content: string }[] = []
         for (let i = 0; i < result.msgSenders!.length; ++i) {
             const msg = {
                 from: result.msgSenders![i],
@@ -118,7 +106,7 @@ export class ContractService {
 
     public async clearMessage(): Promise<string> {
         try {
-            let tx = await this._message!.clearMessage()
+            const tx = await this._message!.clearMessage()
             await tx.wait()
             return tx.hash
         } catch (error) {
@@ -131,33 +119,23 @@ export class ContractService {
 
     // price in ether
     public async registerPublisher(name: string, price: number): Promise<string> {
-        try {
-            let tx = await this._artemis!.registerPublisher(
-                name, this._state.asymmeticKey.pub,
-                ethers.utils.parseEther(price.toString())
-            )
-            await tx.wait()
-            return tx.hash
-        } catch (error) {
-            // handle error
-            throw error
-        }
+        const tx = await this._artemis!.registerPublisher(
+            name, this._state.asymmeticKey.pub,
+            ethers.utils.parseEther(price.toString())
+        )
+        await tx.wait()
+        return tx.hash
     }
 
     public async renamePublisher(newName: string): Promise<string> {
-        try {
-            let tx = await this._artemis!.renamePublisher(newName)
-            await tx.wait()
-            return tx.hash
-        } catch (error) {
-            // handle error
-            throw error
-        }
+        const tx = await this._artemis!.renamePublisher(newName)
+        await tx.wait()
+        return tx.hash
     }
 
     // price in ether
     public async setSubscribingPrice(price: number): Promise<string> {
-        let tx = await this._artemis!.setSubscribingPrice(
+        const tx = await this._artemis!.setSubscribingPrice(
             ethers.utils.parseEther(price.toString())
         )
         await tx.wait()
@@ -165,7 +143,7 @@ export class ContractService {
     }
 
     public async admitSubscribing(subs: string, encKey: string): Promise<string> {
-        let tx = await this._artemis!.admitSubscribing(subs, encKey)
+        const tx = await this._artemis!.admitSubscribing(subs, encKey)
         await tx.wait()
         return tx.hash
     }
@@ -173,7 +151,7 @@ export class ContractService {
     public async uploadArticle(fileLoc: string, title: string, reqSubscribing: boolean)
         : Promise<string>
     {
-        let tx = await this._artemis!.uploadArticle(
+        const tx = await this._artemis!.uploadArticle(
             fileLoc, title, reqSubscribing
         )
         await tx.wait()
@@ -181,7 +159,7 @@ export class ContractService {
     }
 
     public async removeArticle(fileLoc: string): Promise<string> {
-        let tx = await this._artemis!.removeArticle(fileLoc)
+        const tx = await this._artemis!.removeArticle(fileLoc)
         await tx.wait()
         return tx.hash
     }
@@ -189,7 +167,7 @@ export class ContractService {
     // ===== FOR READER =====
 
     public async getPublisherPubKey(publ: string): Promise<string> {
-        let result = await this._artemis!.getPublisherPubKey(publ)
+        const result = await this._artemis!.getPublisherPubKey(publ)
         // check
         return result
     }
@@ -210,7 +188,7 @@ export class ContractService {
         )))
         if (balance < months * price + estimateGas)
             throw new Error('Insufficient balance!')
-        let tx = await this._artemis!.subscribe(
+        const tx = await this._artemis!.subscribe(
             publ, months, this._state.asymmeticKey.pub,
             { value: ethers.utils.parseEther((months * price).toString()) }
         )
@@ -235,7 +213,7 @@ export class ContractService {
             authorAddr: result.authorAddr,
             title: result.title,
             author: result.author,
-            date: new Date(result.date),
+            date: new Date(result.date * 1000),
             reqSubscribing: result.reqSubscribing,
         }
     }

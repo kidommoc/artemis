@@ -21,7 +21,7 @@ export class ArticleService {
         @Inject() private _ipfs: IPFSService
     ) {}
 
-    public async myArticles(): Promise<{ title: string, cid: string }[]> {
+    public async myArticles(): Promise<{ cid: string, title: string }[]> {
         return await this._ipfs.listFiles()
     }
 
@@ -30,7 +30,7 @@ export class ArticleService {
     {
         if (!this._state.isPublisher())
             throw new Error('Not a publisher!')
-        let article: {
+        const article: {
             content: string,
             images: {
                 type: string
@@ -41,12 +41,12 @@ export class ArticleService {
             .replace(new RegExp(/[^a-z]+/, 'g'), '-')
             .replace(/-$/, '')
         article.content = md2h5(utils.FSIO.read(path))
-        let htmlRoot = parseHtml(article.content)
+        const htmlRoot = parseHtml(article.content)
 
         // extract and insert images
-        let imgs = htmlRoot.getElementsByTagName('img')
-        let imgSrc: string[] = []
-        for (let img of imgs) {
+        const imgs = htmlRoot.getElementsByTagName('img')
+        const imgSrc: string[] = []
+        for (const img of imgs) {
             const src = img.attributes['src']
             const imgPath = resolve(dirname(path), src)
             const index = imgSrc.findIndex(ele => ele == imgPath)
@@ -113,12 +113,26 @@ export class ArticleService {
                 .toString('utf-8')
         )
         
-        let article: Article = { content: decompressed.content, images: [] }
+        const article: Article = { content: decompressed.content, images: [] }
         for (const img of decompressed.images)
             article.images.push(new Blob(
                 [Buffer.from(img.buffer)],
                 { type: img.type }
             ))
         return article
+    }
+
+    public getFavouriteList(): { cid: string, title: string }[] {
+        return this._state.favouriteList
+    }
+
+    public async favouriteArticle(ipfsAddr: string, title: string) {
+        this._state.favourite(ipfsAddr, title)
+        await this._ipfs.downloadFile(ipfsAddr)
+    }
+
+    public async unfavouriteArticle(ipfsAddr: string) {
+        this._state.unfavourite(ipfsAddr)
+        await this._ipfs.downloadFile(ipfsAddr)
     }
 }

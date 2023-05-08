@@ -116,7 +116,7 @@ describe('Test query service:', () => {
     test('fetch today', async () => {
         accountService.switchAccount(addrs[0])
         const today = new Date(new Date().getTime() + 86400 * 1000)
-        const result = await queryService.fetchToday(today)
+        const result = await queryService.fetchUpdate()
         console.log(result)
         // expect(result.length).toEqual(cids[1].length + cids[2].length)
     })

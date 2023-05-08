@@ -93,13 +93,13 @@ describe('Test account service', () => {
     test('follow', () => {
         accountService.switchAccount(addrs[1])
         accountService.follow(addrs[0])
-        expect(state.following.findIndex(ele => ele.addr == addrs[0])).not.toEqual(-1)
+        expect(state.followingList.findIndex(ele => ele.addr == addrs[0])).not.toEqual(-1)
     })
 
     test('unfollow', () => {
         accountService.switchAccount(addrs[1])
         accountService.unfollow(addrs[0])
-        expect(state.following.findIndex(ele => ele.addr == addrs[0])).toEqual(-1)
+        expect(state.followingList.findIndex(ele => ele.addr == addrs[0])).toEqual(-1)
     })
 
     test('export and import asymmetic key', () => {
@@ -113,7 +113,7 @@ describe('Test account service', () => {
     })
 
     afterAll(async () => {
-        let list: string[] = []
+        const list: string[] = []
         for await (const file of ipfsNode.files.ls('/'))
             list.push(file.name)
         for (let i = 0; i < list.length; ++i)

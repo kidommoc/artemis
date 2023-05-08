@@ -24,16 +24,19 @@ export class IPFSService {
     // not tested yet!
     private async clearPins() {
         const expired = new Date().getTime() - 30 * 86400 * 1000
-        for (let i = 0; i < this._dlist.length; ++i)
+        for (let i = 0; i < this._dlist.length; ++i) {
+            if (this._state.isFavourite(this._dlist[i].cid))
+                continue
             if (this._dlist[i].date.getTime() < expired) {
                 await this.removePin(this._dlist[i].cid)
                 this._dlist = this._dlist.splice(i)
                 --i
             }
+        }
     }
 
     // not tested yet!
-    private async downloadFile(cid: string) {
+    public async downloadFile(cid: string) {
         const CID = (await import('multiformats')).CID
         this.clearPins()
         const result = this._node.pin.add(CID.parse(cid))
@@ -56,9 +59,9 @@ export class IPFSService {
     }
 
     public async listFiles(): Promise<{ title: string, cid: string }[]> {
-        let list: { cid: string, title: string }[] = []
+        const list: { cid: string, title: string }[] = []
         for await (const file of this._node.files.ls(`/${this._state.ethereumAddr}`)) {
-            let chunks: any[] = []
+            const chunks: Uint8Array[] = []
             for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr}/${file.name}`))
                 chunks.push(chunk)
             list.push({
@@ -83,7 +86,7 @@ export class IPFSService {
     // return cid
     public async removeFile(title: string): Promise<string> {
         const path = `/${this._state.ethereumAddr}/${title}.artemis`
-        let chunks: any[] = []
+        const chunks: Uint8Array[] = []
         for await (const chunk of this._node.files.read(`/${this._state.ethereumAddr}/${title}.artemis`))
             chunks.push(chunk)
         const cid = Buffer.concat(chunks).toString('utf-8')
@@ -95,7 +98,7 @@ export class IPFSService {
     // ===== reader files =====
 
     public async retrieveFile(cid: string): Promise<Buffer> {
-        let chunks: any[] = []
+        const chunks: Uint8Array[] = []
         for await (const chunk of this._node.cat(cid))
             chunks.push(chunk)
         await this.downloadFile(cid)

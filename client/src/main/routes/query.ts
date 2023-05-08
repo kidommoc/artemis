@@ -9,14 +9,14 @@ export interface QueryAPI {
     searchTitle(text: string): Promise<ArticleInfo[]>
     searchAuthor(text: string): Promise<AuthorInfo[]>
     fetchAuthor(publisherAddress: string): Promise<ArticleInfo[]>
-    fetchToday(): Promise<ArticleInfo[]>
+    fetchUpdate(): Promise<ArticleInfo[]>
 }
 
 export interface QueryRouter {
     searchTitle: any
     searchAuthor: any
     fetchAuthor: any
-    fetchToday: any
+    fetchUpdate: any
 }
 
 const queryRouter: QueryRouter = {
@@ -25,7 +25,7 @@ const queryRouter: QueryRouter = {
         function: async function (args: any[]): Promise<ArticleInfo[]> {
             // check
             const text = args[0]
-            let service = Container.get(QueryService)
+            const service = Container.get(QueryService)
             return await service.searchTitle(text.split(' '))
         },
     },
@@ -34,7 +34,7 @@ const queryRouter: QueryRouter = {
         function: async function (args: any[]): Promise<AuthorInfo[]> {
             // check
             const text = args[0]
-            let service = Container.get(QueryService)
+            const service = Container.get(QueryService)
             return await service.searchAuthor(text.split(' '))
         },
     },
@@ -43,16 +43,16 @@ const queryRouter: QueryRouter = {
         function: async function (args: any[]): Promise<ArticleInfo[]> {
             // check
             const publisherAddress = args[0]
-            let service = Container.get(QueryService)
+            const service = Container.get(QueryService)
             return await service.fetchAuthor(publisherAddress)
         }
     },
-    fetchToday: {
-        signal: 'query:FetchToday',
+    fetchUpdate: {
+        signal: 'query:FetchUpdate',
         function: async function (args: any[]): Promise<ArticleInfo[]> {
             args.length
-            let service = Container.get(QueryService)
-            return await service.fetchToday(new Date())
+            const service = Container.get(QueryService)
+            return await service.fetchUpdate()
         }
     },
 }

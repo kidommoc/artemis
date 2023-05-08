@@ -15,7 +15,7 @@ export class Crypto {
         const iv = crypto.createHash('sha256')
             .update(publAddr).digest('hex')
             .substring(0, 32)
-        let cipher = crypto.createCipheriv(
+        const cipher = crypto.createCipheriv(
             symmeticAlgorithm,
             Buffer.from(encryptKey, 'hex'),
             Buffer.from(iv, 'hex'),
@@ -27,7 +27,7 @@ export class Crypto {
         const iv = crypto.createHash('sha256')
             .update(publAddr).digest('hex')
             .substring(0, 32)
-        let decipher = crypto.createDecipheriv(
+        const decipher = crypto.createDecipheriv(
             symmeticAlgorithm,
             Buffer.from(encryptKey, 'hex'),
             Buffer.from(iv, 'hex'),

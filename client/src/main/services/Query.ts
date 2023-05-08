@@ -30,7 +30,7 @@ export class QueryService {
     }
 
     private toAuthorInfos(data: any[]): AuthorInfo[] {
-        let result: AuthorInfo[] = []
+        const result: AuthorInfo[] = []
         if (!Array.isArray(data))
             return result
         for (const ele of data)
@@ -42,7 +42,7 @@ export class QueryService {
     }
 
     private toArticleInfos(data: any[]): ArticleInfo[] {
-        let result: ArticleInfo[] = []
+        const result: ArticleInfo[] = []
         if (!Array.isArray(data))
             return result
         for (const ele of data)
@@ -79,23 +79,19 @@ export class QueryService {
         return this.toArticleInfos(result.data!.artemisArticles)
     }
 
-    public async fetchToday(today: Date): Promise<ArticleInfo[]> {
-        let end = today
-        end.setHours(0)
-        end.setMinutes(0)
-        end.setSeconds(0)
-        end.setMilliseconds(0)
+    public async fetchUpdate(): Promise<ArticleInfo[]> {
+        const end = new Date()
         const endTime = Math.floor(end.getTime() / 1000)
-        let start = new Date(end.getTime() - 86400 * 1000)
+        const start = this._state.lastUpdate
         const startTime = Math.floor(start.getTime() / 1000)
-        console.log(`end: ${endTime}, ${end}\nstart: ${startTime}, ${start}`)
-        let authors: any[] = []
-        for (const ele of this._state.following)
+        const authors: any[] = []
+        for (const ele of this._state.followingList)
             authors.push({ author_: { id: ele.addr.toLowerCase() }})
-        const QUERY = QUERIES.FETCH_TODAY(
+        const QUERY = QUERIES.FETCH_UPDATE(
             JSON.stringify(authors).replace(/"([^"]+)":/g, '$1:')
         )
         const result = await this._client.query(QUERY, { start: startTime, end: endTime })
+        this._state.fetchedUpdate()
         return this.toArticleInfos(result.data!.artemisArticles)
     }
 }

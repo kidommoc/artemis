@@ -12,7 +12,7 @@ declare global {
             account: AccountAPI,
             article: ArticleAPI,
             query: QueryAPI,
-            openFile: function (): Promise<string | undefined>,
+            openFile: () => Promise<string | undefined>,
         }
     }
 }

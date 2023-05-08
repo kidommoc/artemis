@@ -8,7 +8,7 @@ export type { AccountAPI } from '@/main/routes/account'
 export type { ArticleAPI } from '@/main/routes/article'
 export type { QueryAPI } from '@/main/routes/query'
 
-let a = {
+const a = {
     account: account,
     article: article,
     query: query,
@@ -28,7 +28,7 @@ for (const [ key, value ] of Object.entries(query)) {
 }
 export const api = a
 
-let h: Map<string, any> = new Map<string, any>()
+const h: Map<string, any> = new Map<string, any>()
 for (const [ , value ] of Object.entries(account))
     h[value.signal] = value.function
 for (const [ , value ] of Object.entries(article))

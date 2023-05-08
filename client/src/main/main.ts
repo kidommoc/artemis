@@ -3,13 +3,14 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
+import * as config from '@/main/config'
 import loader from '@/main/loader'
 import { handles } from '@/main/routes'
 
 function createWindow(): void {
     const mainWindow = new BrowserWindow({
-        width: 900,
-        height: 670,
+        width: 1280,
+        height: 720,
         show: false,
         autoHideMenuBar: true,
         webPreferences: {
@@ -40,6 +41,7 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+    config.load()
     await loader()
     for (const [signal, handler] of handles.entries())
         ipcMain.handle(signal, handler)
@@ -67,6 +69,7 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
+    config.save()
     if (process.platform !== 'darwin') {
         app.quit()
     }

@@ -43,7 +43,7 @@ export class AccountService {
         const keyPair = utils.Crypto.generateAsymKey()
         const name = await this._contractService.getPublisherName(addr)
         let isPublisher = false
-        if (name != undefined)
+        if (name)
             isPublisher = true
         this._state.addAccount(addr, accountKey, keyPair, isPublisher, name)
         this.switchAccount(addr)
@@ -68,7 +68,7 @@ export class AccountService {
         const name = await this._contractService.getPublisherName(addr)
         if (name! == undefined)
             throw new Error('Not a publisher!')
-        this._state.follow(addr, name!, SubscribingStatus.NO)
+        this._state.follow(addr, SubscribingStatus.NO, name!)
     }
 
     public unfollow(addr: string) {
@@ -77,10 +77,10 @@ export class AccountService {
 
     public async subscribe(addr: string, months: number) {
         const name = await this._contractService.getPublisherName(addr)
-        if (name == undefined)
+        if (!name)
             throw new Error('Not a publisher!')
         await this._contractService.subscribe(addr, months)
-        this._state.follow(addr, name!, SubscribingStatus.REQ)
+        this._state.follow(addr, SubscribingStatus.REQ, name!)
     }
 
     public importAsymKeys(path: string) {
@@ -113,7 +113,7 @@ export class AccountService {
                     break
                 case MsgCode.SUB_RES:
                     try {
-                        this._state.follow(msg.from, undefined, SubscribingStatus.YES)
+                        this._state.follow(msg.from, SubscribingStatus.YES)
                     } catch (error) { }
                     break
                 default:

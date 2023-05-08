@@ -31,7 +31,7 @@ describe('Test IPFS service:', () => {
         ipfsNode = await ipfs.create()
         Container.set('IPFSNode', ipfsNode)
 
-        let list: string[] = []
+        const list: string[] = []
         for await (const file of ipfsNode.files.ls('/'))
             list.push(file.name)
         for (let i = 0; i < list.length; ++i)
@@ -40,7 +40,7 @@ describe('Test IPFS service:', () => {
     }, 120 * 1000)
 
     afterAll(async () => {
-        let list: string[] = []
+        const list: string[] = []
         for await (const file of ipfsNode.files.ls('/'))
             list.push(file.name)
         for (let i = 0; i < list.length; ++i)

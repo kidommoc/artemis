@@ -13,7 +13,7 @@ let state: State
 let ipfsNode
 let accountService: AccountService
 let contractService: ContractService
-let addrs: string[] = []
+const addrs: string[] = []
 let uploadTime = new Date()
 let admitTxHash: string
 

@@ -41,7 +41,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]): { accountAddress: string, name: string | undefined }[] {
             args.length
             const state: State = Container.get('State')
-            let list: { accountAddress: string, name: string | undefined }[] = []
+            const list: { accountAddress: string, name: string | undefined }[] = []
             for (const ele of state.ethereumAccountList)
                 list.push({
                     accountAddress: ele.addr,
@@ -55,7 +55,7 @@ const accountRouter: AccountRouter = {
         function: async function (args: any[]) {
             // check
             const accountPrivateKey = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             await service.addAccount(accountPrivateKey)
         },
     },
@@ -64,7 +64,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]) {
             // check
             const accountAddress = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.switchAccount(accountAddress)
         },
     },
@@ -72,7 +72,7 @@ const accountRouter: AccountRouter = {
         signal: 'account:Logout',
         function: function (args: any[]) {
             args.length
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.logout()
         },
     },
@@ -81,7 +81,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]) {
             // check
             const accountAddress = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.switchAccount(accountAddress)
         },
     },
@@ -90,7 +90,7 @@ const accountRouter: AccountRouter = {
         function: async function (args: any[]) {
             // check
             const newName = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             await service.rename(newName)
         },
     },
@@ -100,7 +100,7 @@ const accountRouter: AccountRouter = {
             // check
             const name = args[0]
             const price = args[1]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             await service.registerPublisher(name, price)
         },
     },
@@ -109,7 +109,7 @@ const accountRouter: AccountRouter = {
         function: async function (args: any[]) {
             // check
             const publisherAddress = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             await service.follow(publisherAddress)
         },
     },
@@ -118,7 +118,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]) {
             // check
             const publisherAddress = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.unfollow(publisherAddress)
         },
     },
@@ -128,7 +128,7 @@ const accountRouter: AccountRouter = {
             // check
             const publisherAddress = args[0]
             const months = args[1]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             await service.subscribe(publisherAddress, months)
         },
     },
@@ -137,8 +137,11 @@ const accountRouter: AccountRouter = {
         function: async function (args: any[]): Promise<Date> {
             // check
             const publisherAddress = args[0]
-            let service = Container.get(ContractService)
-            return await service.getSubscribingTime(publisherAddress)
+            const service = Container.get(ContractService)
+            const date =  await service.getSubscribingTime(publisherAddress)
+            if (!date)
+                throw new Error('Have not subscribed yet!')
+            return date
         },
     },
     importAsymmeticKeys: {
@@ -146,7 +149,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]) {
             // check
             const path = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.importAsymKeys(path)
         },
     },
@@ -155,7 +158,7 @@ const accountRouter: AccountRouter = {
         function: function (args: any[]) {
             // check
             const path = args[0]
-            let service = Container.get(AccountService)
+            const service = Container.get(AccountService)
             service.exportAsymKeys(path)
         },
     },

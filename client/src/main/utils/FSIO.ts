@@ -13,7 +13,7 @@ export class FSIO {
         return fs.readFileSync(resolve(path))
     }
 
-    public static write(path: string, content: string) {
+    public static write(path: string, content: string | Buffer) {
         fs.writeFileSync(resolve(path), content, { encoding: 'utf-8' })
     }
 }

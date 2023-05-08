@@ -14,7 +14,7 @@ const path1 = resolve('./src/test/test1.md')
 const path2 = resolve('./src/test/test2.md')
 const title1 = 'Test Article 1'
 const title2 = 'Test Article 2'
-let addrs: string[] = []
+const addrs: string[] = []
 let state: State
 let ipfsNode
 let articleService: ArticleService
@@ -23,19 +23,19 @@ let contractService: ContractService
 let cid: string
 let filename1: string
 let filename2: string
-let article1: Article = { content: '', images: [] }
-let article2: Article = { content: '', images: [] }
+let article1: Article
+let article2: Article
 
 function generateArticle(path: string, title: string): [Article, string] {
-    let article: Article = { content: '', images: [] }
-    let filename = title.toLowerCase()
+    const article: Article = { content: '', images: [] }
+    const filename = title.toLowerCase()
         .replace(new RegExp(/[^a-z]+/, 'g'), '-')
         .replace(/-$/, '')
     article.content = md2h5(utils.FSIO.read(path))
-    let htmlRoot = parseHtml(article.content)
-    let imgs = htmlRoot.getElementsByTagName('img')
-    let imgSrc: string[] = []
-    for (let img of imgs) {
+    const htmlRoot = parseHtml(article.content)
+    const imgs = htmlRoot.getElementsByTagName('img')
+    const imgSrc: string[] = []
+    for (const img of imgs) {
         const src = img.attributes['src']
         const imgPath = resolve(dirname(path), src)
         const index = imgSrc.findIndex(ele => ele == imgPath)
@@ -64,14 +64,10 @@ beforeAll(async () => {
     Container.set('IPFSNode', ipfsNode)
     const file = utils.FSIO.read('./src/test/test-state.json')
     state = new State(JSON.parse(file))
-    Container.set('State', state)
+    Container.set('State', state);
 
-    const [ a, b ] = generateArticle(path1, title1)
-    article1 = a
-    filename1 = b
-    const [ c, d ] = generateArticle(path2, title2)
-    article2 = c
-    filename2 = d
+    ([ article1, filename1 ] = generateArticle(path1, title1));
+    ([ article2, filename2 ] = generateArticle(path2, title2))
 }, 120 * 1000)
 
 describe('Test article service', () => {
@@ -104,6 +100,14 @@ describe('Test article service', () => {
         cid = await articleService.uploadArticle(path1, title1, false)
     }, 120 * 1000)
 
+    test('get my article list', async () => {
+        accountService.switchAccount(addrs[0])
+        const list = await articleService.myArticles()
+        expect(list.length).toEqual(1)
+        expect(list[0].cid).toEqual(cid)
+        expect(list[0].title).toEqual(filename1)
+    }, 120 * 1000)
+
     test('fetch free article', async () => {
         accountService.switchAccount(addrs[1])
         const fetched = await articleService.fetchArticle(cid, addrs[0])
@@ -113,13 +117,20 @@ describe('Test article service', () => {
             expect(fetched.images[i]).toEqual(article1.images[i])
     }, 120 * 1000)
 
-    test('get my article list', async () => {
-        accountService.switchAccount(addrs[0])
-        const list = await articleService.myArticles()
+    test('favourite free article', async () => {
+        accountService.switchAccount(addrs[1])
+        await articleService.favouriteArticle(cid, title1)
+        const list = articleService.getFavouriteList()
         expect(list.length).toEqual(1)
         expect(list[0].cid).toEqual(cid)
-        expect(list[0].title).toEqual(filename1)
-    }, 120 * 1000)
+        expect(list[0].title).toEqual(title1)
+    })
+
+    test('unfavourite free article', async () => {
+        accountService.switchAccount(addrs[1])
+        await articleService.unfavouriteArticle(cid)
+        expect(articleService.getFavouriteList().length).toEqual(0)
+    })
 
     test('remove free article', async () => {
         accountService.switchAccount(addrs[0])
@@ -151,7 +162,7 @@ describe('Test article service', () => {
     test('fetch paid article by subscribing reader', async () => {
         accountService.switchAccount(addrs[2])
         const subsTime = await contractService.getSubscribingTime(addrs[0])
-        if (subsTime == undefined) {
+        if (!subsTime) {
             await accountService.subscribe(addrs[0], 1)
             await new Promise(resolve => setTimeout(resolve, 10 * 1000))
             accountService.switchAccount(addrs[0])

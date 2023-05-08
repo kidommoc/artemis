@@ -5,17 +5,50 @@ export enum SubscribingStatus {
     REQ,
     YES,
 }
-export type AsymmeticKey = { pub: string, pri: string }
+
+export type StateFile = {
+    EthereumUrl: string,
+    ContractArtemis: string,
+    ContractMessage: string,
+    GraphQLUrl: string,
+    LoginAccountAddress?: string,
+    Accounts: {
+        AccountAddress: string,
+        AccountPrivateKey: string,
+        AsymmeticKey?: {
+            PublicKey: string,
+            PrivateKey: string,
+        },
+        IsPublisher?: boolean,
+        Name?: string,
+        LastUpdate?: number,
+        Following?: {
+            Address: string,
+            Name: string,
+            IsSubscribing: SubscribingStatus,
+        }[],
+        Favourite?: {
+            CID: string,
+            Title: string,
+        }[],
+    }[],
+}
+
 export type AccountInfo = {
     address: string,
     accountKey: string,
-    asymKey: AsymmeticKey,
+    asymKey: { pub: string, pri: string },
     isPublisher: boolean,
     name: string | undefined,
+    lastUpdate: Date,
     following: {
         addr: string,
         name: string,
         isSubscribing: SubscribingStatus
+    }[],
+    favourite: {
+        cid: string,
+        title: string,
     }[],
 }
 
@@ -31,15 +64,15 @@ export class State {
      * required: ipfs url, chain url and contract addrs,
      * optional: log-in accounts
      */
-    constructor(file: any) {
-        // empty check
-        if (file.EthereumUrl! == undefined
-            || file.ContractMessage! == undefined
-            || file.ContractArtemis! == undefined
-            || file.GraphQLUrl! == undefined
-        ) {
-            // throw error
-        }
+    constructor(file: StateFile) {
+        if (!file.EthereumUrl)
+            throw new Error('Missing Ethereum network url!')
+        if (!file.ContractArtemis)
+            throw new Error('Missing Artemis contract address!')
+        if (!file.ContractMessage)
+            throw new Error('Missing ArtemisMessage contract address!')
+        if (!file.GraphQLUrl)
+            throw new Error('Missing GraphQL node url!')
 
         this._ethereumUrl = file.EthereumUrl!
         this._ethereumContractArtemis = file.ContractArtemis!
@@ -47,50 +80,64 @@ export class State {
         this._graphqlUrl = file.GraphQLUrl!
         this._ethereumAccountIndex = -1
 
-        if (file.Accounts != undefined)
+        if (Array.isArray(file.Accounts))
             for (const ele of file.Accounts!) {
-                // empty/error check
-                if (ele.AccountAddress! == undefined
-                    || ele.AccountPrivateKey! == undefined
-                    || ele.AsymmeticKey! == undefined
-                    || ele.AsymmeticKey.PublicKey! == undefined
-                    || ele.AsymmeticKey.PrivateKey! == undefined
-                    || ele.IsPublisher! == undefined
-                ) {
-                    // throw error
+                if (ele.AccountAddress != utils.computeAddr(ele.AccountPrivateKey))
+                    continue
+
+                const asymKey = { pub: '', pri: '' }
+                if (ele.AsymmeticKey) {
+                    if (utils.Crypto.verifyKeyPair(ele.AsymmeticKey.PublicKey, ele.AsymmeticKey.PrivateKey))
+                        continue;
+                    asymKey.pub = ele.AsymmeticKey.PublicKey
+                    asymKey.pri = ele.AsymmeticKey.PrivateKey
                 }
-                if (ele.AccountAddress != utils.computeAddr(ele.AccountPrivateKey)) {
-                    // throw error
+                else {
+                    const generated = utils.Crypto.generateAsymKey()
+                    asymKey.pub = generated.publicKey
+                    asymKey.pri = generated.privateKey
                 }
-                if (utils.Crypto.verifyKeyPair(ele.AsymmeticKey.PublicKey, ele.AsymmeticKey.PrivateKey)) {
-                    // throw error
-                }
+
+                let isPublisher = false
+                if (ele.IsPublisher)
+                    isPublisher = ele.IsPublisher
 
                 if (ele.AccountAddress == file.LoginAccountAddress!)
                     this._ethereumAccountIndex = this._accountInfos.length
-                let following: any[] = []
+                let lastUpdate = new Date()
+                if (ele.LastUpdate && typeof ele.LastUpdate === 'number') {
+                    const date = new Date(ele.LastUpdate)
+                    if (!isNaN(date.getTime()))
+                        lastUpdate = date
+                }
+                const following: any[] = []
                 if (Array.isArray(ele.Following))
-                    for (const follow of ele.Following!) {
-                        if (follow.Address != undefined
-                            && follow.Name != undefined
-                            && follow.isSubscribing != undefined
+                    for (const fo of ele.Following!)
+                        if (fo.Address && typeof fo.Address === 'string'
+                            && fo.Name && typeof fo.Name === 'string'
+                            && fo.IsSubscribing && typeof fo.IsSubscribing === 'boolean'
                         )
                             following.push({
-                                addr: follow.Address,
-                                name: follow.Name,
-                                isSubscribing: follow.IsSubscribing,
+                                addr: fo.Address,
+                                name: fo.Name,
+                                isSubscribing: fo.IsSubscribing,
                             })
-                    } 
-                let info: AccountInfo = {
+                const favourite: any[] = []
+                if (Array.isArray(ele.Favourite))
+                    for (const fav of ele.Favourite!)
+                        favourite.push({
+                            cid: fav.CID,
+                            title: fav.Title,
+                        })
+                const info: AccountInfo = {
                     address: ele.AccountAddress,
                     accountKey: ele.AccountPrivateKey,
-                    asymKey: {
-                        pub: ele.AsymmeticKey.Public,
-                        pri: ele.AsymmeticKey.Private
-                    },
-                    isPublisher: ele.IsPublisher,
+                    asymKey: asymKey,
+                    isPublisher: isPublisher,
                     name: ele.Name!,
-                    following: following
+                    lastUpdate: lastUpdate,
+                    following: following,
+                    favourite: favourite,
                 }
                 this._accountInfos.push(info)
             }
@@ -112,7 +159,7 @@ export class State {
     }
     get graphqlUrl(): string { return this._graphqlUrl }
     get ethereumAccountList(): { addr: string, name: string | undefined }[] {
-        let list: { addr: string, name: string | undefined }[] = []
+        const list: { addr: string, name: string | undefined }[] = []
         for (const ele of this._accountInfos)
             list.push({
                 addr: ele.address,
@@ -146,14 +193,22 @@ export class State {
     }
     set name(newName: string | undefined) {
         this.checkLogin()
-        if (newName! == undefined) {
+        if (!newName) {
             // throw error
         }
         this._accountInfos[this._ethereumAccountIndex].name = newName!
     }
-    get following(): { addr: string, name: string }[] {
+    get lastUpdate(): Date {
+        this.checkLogin()
+        return this._accountInfos[this._ethereumAccountIndex].lastUpdate
+    }
+    get followingList(): { addr: string, name: string }[] {
         this.checkLogin()
         return this._accountInfos[this._ethereumAccountIndex].following
+    }
+    get favouriteList(): { cid: string, title: string }[] {
+        this.checkLogin()
+        return this._accountInfos[this._ethereumAccountIndex].favourite
     }
     public isPublisher(): boolean {
         this.checkLogin()
@@ -163,17 +218,33 @@ export class State {
         this.checkLogin()
         this._accountInfos[this._ethereumAccountIndex].isPublisher = true
     }
+    public fetchedUpdate() {
+        this.checkLogin()
+        this._accountInfos[this._ethereumAccountIndex].lastUpdate = new Date()
+    }
+    public isFavourite(cid: string): boolean {
+        for (const info of this._accountInfos)
+            if (info.favourite.findIndex(ele => ele.cid == cid) != -1)
+                return true
+        return false
+    }
 
     // serialize state now to string
     public serialize(): string {
-        let accounts: any[] = []
+        const accounts: any[] = []
         for (const ele of this._accountInfos) {
-            let following: any[] = []
-            for (const follow of ele.following)
+            const following: any[] = []
+            for (const fo of ele.following)
                 following.push({
-                    Address: follow.addr,
-                    Name: follow.name,
-                    IsSubscribing: follow.isSubscribing,
+                    Address: fo.addr,
+                    Name: fo.name,
+                    IsSubscribing: fo.isSubscribing,
+                })
+            const favourite: any[] = []
+            for (const fav of ele.favourite)
+                favourite.push({
+                    CID: fav.cid,
+                    Title: fav.title,
                 })
             const info = {
                 AccountAddress: ele.address,
@@ -182,18 +253,20 @@ export class State {
                     Public: ele.asymKey.pub,
                     Private: ele.asymKey.pri,
                 },
-                IsPublisher: ele.isPublisher,
                 Name: ele.name,
+                LastUpdate: ele.lastUpdate.getTime(),
                 Following: following,
+                Favourite: favourite,
             }
             accounts.push(info)
         }
-        let json = {
+        const loginAddr = this._ethereumAccountIndex == -1 ? undefined : this.ethereumAddr
+        const json = {
             EthereumUrl: this._ethereumUrl,
             ContractArtemis: this._ethereumContractArtemis,
             ContractMessage: this._ethereumContractMessage,
             GraphQLUrl: this._graphqlUrl,
-            LoginAccountAddress: this.ethereumAddr,
+            LoginAccountAddress: loginAddr,
             Accounts: accounts,
         }
         return JSON.stringify(json)
@@ -204,11 +277,11 @@ export class State {
     public addAccount(
         addr: string, accountKey: string, 
         keyPair: { publicKey: string, privateKey: string },
-        isPublisher: boolean, name: string | undefined
+        isPublisher: boolean, name?: string
     ) {
         if (this._accountInfos.findIndex(ele => ele.address == addr) != -1)
             return
-        let info: AccountInfo = {
+        const info: AccountInfo = {
             address: addr,
             accountKey: accountKey,
             asymKey: {
@@ -216,14 +289,16 @@ export class State {
                 pri: keyPair.privateKey
             },
             isPublisher: isPublisher,
-            name: name,    
+            name: name,
+            lastUpdate: new Date(),
             following: [],
+            favourite: [],
         }
         this._accountInfos.push(info)
     }
 
     public switchAccount(addr: string) {
-        let index = this._accountInfos.findIndex(ele => ele.address == addr)
+        const index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, do not switch
         if (index == -1) {
             // throw error
@@ -232,7 +307,7 @@ export class State {
     }
 
     public removeAccount(addr: string) {
-        let index = this._accountInfos.findIndex(ele => ele.address == addr)
+        const index = this._accountInfos.findIndex(ele => ele.address == addr)
         // fail: index == -1, remove nothing
         if (index == -1) {
             // throw error
@@ -250,13 +325,13 @@ export class State {
         this._ethereumAccountIndex = -1
     }
 
-    public follow(addr: string, name: string | undefined, isSubscribing: SubscribingStatus) {
+    public follow(addr: string, isSubscribing: SubscribingStatus, name?: string) {
         this.checkLogin()
         const index = this._accountInfos[this._ethereumAccountIndex]
             .following.findIndex(ele => ele.addr == addr)
         if (index == -1) {
-            if (name == undefined)
-                throw new Error('Neea a name for publisher!')
+            if (!name)
+                throw new Error('Need a name for publisher!')
             this._accountInfos[this._ethereumAccountIndex].following.push({
                 addr: addr,
                 name: name!,
@@ -276,5 +351,30 @@ export class State {
             return
         this._accountInfos[this._ethereumAccountIndex]
             .following.splice(index)
+    }
+
+    public favourite(cid: string, title: string) {
+        this.checkLogin()
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .favourite.findIndex(ele => ele.cid == cid)
+        if (index == -1) {
+            if (!title)
+                throw new Error('Need a title for article!')
+            this._accountInfos[this._ethereumAccountIndex]
+                .favourite.push({
+                    cid: cid,
+                    title: title,
+                })
+        }
+    }
+
+    public unfavourite(cid: string) {
+        this.checkLogin()
+        const index = this._accountInfos[this._ethereumAccountIndex]
+            .favourite.findIndex(ele => ele.cid == cid)
+        if (index == -1)
+            return
+        this._accountInfos[this._ethereumAccountIndex]
+            .favourite.splice(index)
     }
 }
