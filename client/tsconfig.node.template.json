@@ -50,6 +50,7 @@
     ],
     "types": [                                           /* Specify type package names to be included without being referenced in a source file. */
       "electron-vite/node",
+      "vite/client",
       "jest",
       "@types/jest"
     ],

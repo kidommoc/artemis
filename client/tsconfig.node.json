@@ -27,6 +27,7 @@
     ],
     "types": [
       "electron-vite/node",
+      "vite/client",
       "jest",
       "@types/jest"
     ],

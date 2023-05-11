@@ -1,4 +1,5 @@
 import { Container } from 'typedi'
+import { State } from '@/main/State'
 import {
     QueryService,
     type AuthorInfo,
@@ -9,7 +10,7 @@ export interface QueryAPI {
     searchTitle(text: string): Promise<ArticleInfo[]>
     searchAuthor(text: string): Promise<AuthorInfo[]>
     fetchAuthor(publisherAddress: string): Promise<ArticleInfo[]>
-    fetchUpdate(): Promise<ArticleInfo[]>
+    fetchUpdate(): Promise<{ from: Date, to: Date, infos: ArticleInfo[]}>
 }
 
 export interface QueryRouter {
@@ -49,10 +50,19 @@ const queryRouter: QueryRouter = {
     },
     fetchUpdate: {
         signal: 'query:FetchUpdate',
-        function: async function (args: any[]): Promise<ArticleInfo[]> {
+        function: async function (args: any[])
+            : Promise<{ from: Date, to: Date, infos: ArticleInfo[] }>
+        {
             args.length
+            const state: State = Container.get('State')
             const service = Container.get(QueryService)
-            return await service.fetchUpdate()
+            const from = state.lastUpdate
+            const result =  await service.fetchUpdate()
+            const to = state.lastUpdate
+            return {
+                from: from, to: to,
+                infos: result,
+            }
         }
     },
 }

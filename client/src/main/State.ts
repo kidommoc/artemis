@@ -6,50 +6,34 @@ export enum SubscribingStatus {
     YES,
 }
 
+export type AccountInfo = {
+    AccountAddress: string,
+    AccountPrivateKey: string,
+    AsymmeticKey?: {
+        PublicKey: string,
+        PrivateKey: string,
+    },
+    IsPublisher?: boolean,
+    Name?: string,
+    LastUpdate?: number,
+    Following?: {
+        Address: string,
+        Name: string,
+        IsSubscribing: SubscribingStatus,
+    }[],
+    Favourite?: {
+        CID: string,
+        Title: string,
+    }[],
+}
+
 export type StateFile = {
     EthereumUrl: string,
     ContractArtemis: string,
     ContractMessage: string,
     GraphQLUrl: string,
     LoginAccountAddress?: string,
-    Accounts: {
-        AccountAddress: string,
-        AccountPrivateKey: string,
-        AsymmeticKey?: {
-            PublicKey: string,
-            PrivateKey: string,
-        },
-        IsPublisher?: boolean,
-        Name?: string,
-        LastUpdate?: number,
-        Following?: {
-            Address: string,
-            Name: string,
-            IsSubscribing: SubscribingStatus,
-        }[],
-        Favourite?: {
-            CID: string,
-            Title: string,
-        }[],
-    }[],
-}
-
-export type AccountInfo = {
-    address: string,
-    accountKey: string,
-    asymKey: { pub: string, pri: string },
-    isPublisher: boolean,
-    name: string | undefined,
-    lastUpdate: Date,
-    following: {
-        addr: string,
-        name: string,
-        isSubscribing: SubscribingStatus
-    }[],
-    favourite: {
-        cid: string,
-        title: string,
-    }[],
+    Accounts: AccountInfo[],
 }
 
 export class State {
@@ -58,7 +42,23 @@ export class State {
     private _ethereumContractMessage: string
     private _ethereumAccountIndex: number
     private _graphqlUrl: string
-    private _accountInfos: AccountInfo[] = []
+    private _accountInfos: {
+        address: string,
+        accountKey: string,
+        asymKey: { pub: string, pri: string },
+        isPublisher: boolean,
+        name: string | undefined,
+        lastUpdate: Date,
+        following: {
+            addr: string,
+            name: string,
+            isSubscribing: SubscribingStatus
+        }[],
+        favourite: {
+            cid: string,
+            title: string,
+        }[],
+    }[] = []
 
     /* constructor
      * required: ipfs url, chain url and contract addrs,
@@ -129,7 +129,7 @@ export class State {
                             cid: fav.CID,
                             title: fav.Title,
                         })
-                const info: AccountInfo = {
+                const info = {
                     address: ele.AccountAddress,
                     accountKey: ele.AccountPrivateKey,
                     asymKey: asymKey,
@@ -262,10 +262,6 @@ export class State {
         }
         const loginAddr = this._ethereumAccountIndex == -1 ? undefined : this.ethereumAddr
         const json = {
-            EthereumUrl: this._ethereumUrl,
-            ContractArtemis: this._ethereumContractArtemis,
-            ContractMessage: this._ethereumContractMessage,
-            GraphQLUrl: this._graphqlUrl,
             LoginAccountAddress: loginAddr,
             Accounts: accounts,
         }
@@ -281,7 +277,7 @@ export class State {
     ) {
         if (this._accountInfos.findIndex(ele => ele.address == addr) != -1)
             return
-        const info: AccountInfo = {
+        const info = {
             address: addr,
             accountKey: accountKey,
             asymKey: {
@@ -312,10 +308,7 @@ export class State {
         if (index == -1) {
             // throw error
         }
-        if (index == this._ethereumAccountIndex) {
-            // emit logout event
-            // which will call the logout() of Configuration
-        }
+        // this.logout()
         if (index > this._ethereumAccountIndex)
             --this._ethereumAccountIndex
         this._accountInfos.splice(index)

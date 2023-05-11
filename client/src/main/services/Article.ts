@@ -9,6 +9,10 @@ import { IPFSService } from '@/main/services/IPFS'
 import * as utils from '@/main/utils'
 
 export type Article = {
+    title: string,
+    author: string,
+    authorAddress: string,
+    date: Date,
     content: string,
     images: Blob[],
 }
@@ -90,10 +94,11 @@ export class ArticleService {
         await this._contracts.removeArticle(ipfsAddr)
     }
 
-    public async fetchArticle(ipfsAddr: string, publAddr: string): Promise<Article>  {
+    public async fetchArticle(ipfsAddr: string): Promise<Article>  {
         const permission = await this._contracts.accessArticle(ipfsAddr)
         if (!permission.permission)
             throw new Error('No access permission!')
+        const info = await this._contracts.getArticleInfo(ipfsAddr)
         const fetched = await this._ipfs.retrieveFile(ipfsAddr)
         const compressed = ((): Buffer => {
             if (permission.encKey == null)
@@ -106,24 +111,27 @@ export class ArticleService {
                     this._state.asymmeticKey.pri
                 )
             })()
-            return utils.Crypto.symDecrypt(fetched, publAddr, encKey)
+            return utils.Crypto.symDecrypt(fetched, info.authorAddr, encKey)
         })()
         const decompressed = JSON.parse(
             utils.Compression.decompress(compressed)
                 .toString('utf-8')
         )
         
-        const article: Article = { content: decompressed.content, images: [] }
+        const article: Article = {
+            title: info.title,
+            author: info.author,
+            authorAddress: info.authorAddr,
+            date: info.date,
+            content: decompressed.content,
+            images: []
+        }
         for (const img of decompressed.images)
             article.images.push(new Blob(
                 [Buffer.from(img.buffer)],
                 { type: img.type }
             ))
         return article
-    }
-
-    public getFavouriteList(): { cid: string, title: string }[] {
-        return this._state.favouriteList
     }
 
     public async favouriteArticle(ipfsAddr: string, title: string) {

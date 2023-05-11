@@ -69,7 +69,8 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
-    config.save()
+    if (import.meta.env.PROD)
+        config.save()
     if (process.platform !== 'darwin') {
         app.quit()
     }

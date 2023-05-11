@@ -4,7 +4,10 @@ import { AccountService } from '@/main/services/Account'
 import { ContractService } from '@/main/services/Contract'
 
 export interface AccountAPI {
-    getAccountList(): { accountAddress: string, name: string | undefined }[]
+    getAccountList(): { accountAddress: string, name?: string }[]
+    getAccountAddress(): string
+    getAccountPrivateKey(): string
+    getFollowingList(): { accountAddress: string, name: string }[]
     addAccount(accountPrivateKey: string): Promise<void>
     login(accountAddress: string)
     logout()
@@ -21,6 +24,9 @@ export interface AccountAPI {
 
 export interface AccountRouter {
     getAccountList: any
+    getAccountAddress: any,
+    getAccountPrivateKey: any,
+    getFollowingList: any,
     addAccount: any
     login: any
     logout: any
@@ -38,10 +44,10 @@ export interface AccountRouter {
 const accountRouter: AccountRouter = {
     getAccountList : {
         signal: 'account:GetAccountList',
-        function: function (args: any[]): { accountAddress: string, name: string | undefined }[] {
+        function: function (args: any[]): { accountAddress: string, name?: string }[] {
             args.length
             const state: State = Container.get('State')
-            const list: { accountAddress: string, name: string | undefined }[] = []
+            const list: { accountAddress: string, name?: string }[] = []
             for (const ele of state.ethereumAccountList)
                 list.push({
                     accountAddress: ele.addr,
@@ -49,6 +55,48 @@ const accountRouter: AccountRouter = {
                 })
             return list
         },
+    },
+    getAccountAddress: {
+        signal: 'account:GetAccountAddress',
+        function: function (args: any[]): string {
+            args.length
+            const state: State = Container.get('State')
+            try {
+                return state.ethereumAddr
+            } catch (error) {
+                return ''
+            }
+        }
+    },
+    getAccountPrivateKey: {
+        signal: 'account:GetAccountPrivateKey',
+        function: function (args: any[]): string {
+            args.length
+            const state: State = Container.get('State')
+            try {
+                return state.ethereumAccountPrivateKey
+            } catch (error) {
+                return ''
+            }
+        }
+    },
+    getFollowingList: {
+        signal: 'account:GetFollowingList',
+        function: function (args: any[]): { accountAddress: string, name: string }[] {
+            args.length
+            const state: State = Container.get('State')
+            try {
+                const list: { accountAddress: string, name: string }[] = []
+                for (const ele of state.followingList)
+                    list.push({
+                        accountAddress: ele.addr,
+                        name: ele.name,
+                    })
+                return list
+            } catch (error) {
+                return []
+            }
+        }
     },
     addAccount: {
         signal: 'account:AddAccount',
