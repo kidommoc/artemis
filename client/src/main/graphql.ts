@@ -12,16 +12,16 @@ query SearchTitle($text: String!) {
     }
 }`
 
-export const SEARCH_AUTHOR = `
-query SearchAuthor($text: String!) {
+export const SEARCH_PUBLISHER = `
+query SearchPublisher($text: String!) {
     authorSearch(text: $text) {
         id,
         name
     }
 }`
 
-export const FETCH_AUTHOR = `
-query FetchAuthor($id: Bytes!) {
+export const FETCH_PUBLISHER = `
+query FetchPublisher($id: Bytes!) {
     artemisArticles(orderBy: date, orderDirection: desc,
         where: { author_: { id: $id }}
     ) {
@@ -36,7 +36,7 @@ query FetchAuthor($id: Bytes!) {
 }`
 
 export const FETCH_UPDATE = (authors): string => `
-query FetchToday($start: BigInt!, $end: BigInt!) {
+query FetchUpdate($start: BigInt!, $end: BigInt!) {
     artemisArticles(orderBy: date, orderDirection: desc,
         where: { and: [
             { date_gte: $start },

@@ -1,6 +1,6 @@
 {
   "name": "artemis",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "a blockchain-and-ipfs-based media distributing system",
   "main": "./dist/main/main.js",
   "author": "kidommoc",
@@ -28,8 +28,10 @@
     "md2h5": "file:dependencies/md2h5",
     "multiformats": "^11.0.2",
     "node-html-parser": "^6.1.5",
+    "pinia": "^2.0.36",
     "reflect-metadata": "^0.1.13",
-    "typedi": "^0.10.0"
+    "typedi": "^0.10.0",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",

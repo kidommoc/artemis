@@ -89,9 +89,9 @@ describe('Test contract service:', () => {
     test('account1: fetch info of free article', async () => {
         accountService.switchAccount(addrs[1])
         const info = await contractService.getArticleInfo(freeArticleAddr)
-        expect(info.authorAddr).toEqual(addrs[0])
         expect(info.title).toEqual('free to read!')
-        expect(info.author).toEqual('AUTHOR 0')
+        expect(info.publisher).toEqual('AUTHOR 0')
+        expect(info.publisherAddr).toEqual(addrs[0])
         expect(info.reqSubscribing).toBeFalsy()
         expect(info.date.getTime()).toEqual(uploadTime.getTime())
     })

@@ -1,4 +1,4 @@
-import * as utils from '@/main/utils'
+import * as utils from '@/utils'
 
 export enum SubscribingStatus {
     NO,
@@ -218,15 +218,22 @@ export class State {
         this.checkLogin()
         this._accountInfos[this._ethereumAccountIndex].isPublisher = true
     }
-    public fetchedUpdate() {
+    public fetchedUpdatesAt(date: Date) {
         this.checkLogin()
-        this._accountInfos[this._ethereumAccountIndex].lastUpdate = new Date()
+        this._accountInfos[this._ethereumAccountIndex].lastUpdate = date
     }
     public isFavourite(cid: string): boolean {
         for (const info of this._accountInfos)
             if (info.favourite.findIndex(ele => ele.cid == cid) != -1)
                 return true
         return false
+    }
+    public subscribingStatus(addr: string): SubscribingStatus | undefined {
+        const index = this._accountInfos[this._ethereumAccountIndex].following
+            .findIndex(ele => ele.addr == addr)
+        if (index === -1)
+            return undefined
+        return this._accountInfos[this._ethereumAccountIndex].following[index].isSubscribing
     }
 
     // serialize state now to string

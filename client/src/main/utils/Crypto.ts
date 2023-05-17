@@ -3,10 +3,14 @@ import * as crypto from 'node:crypto'
 export const symmeticAlgorithm = 'aes-256-cbc'
 
 export class Crypto {
-    public static getSymEncKey(accountPriKey: string): string {
+    public static hash64(msg: string): string {
         return crypto.createHash('sha256')
-            .update(accountPriKey).digest('hex')
+            .update(msg).digest('hex')
             .substring(0, 64)
+    }
+
+    public static getSymEncKey(accountPriKey: string): string {
+        return this.hash64(accountPriKey)
     }
 
     public static symEncrypt(data: Buffer, publAddr: string, encryptKey: string)

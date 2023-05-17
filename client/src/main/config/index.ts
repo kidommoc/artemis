@@ -1,21 +1,23 @@
 import { Container } from 'typedi'
 
-import * as utils from '@/main/utils'
-import { State } from '@/main/State'
-import type { AccountInfo, StateFile } from '@/main/State'
+import * as utils from '@/utils'
+import { State } from '@/State'
+import type { AccountInfo, StateFile } from '@/State'
 
 const CONFIG_PATH = 'ACCOUNTS' // !!!!!
 const key = utils.Crypto.getSymEncKey('artemis')
 
 export function load() {
     const file: StateFile = {
-        EthereumUrl: import.meta.env.ETHEREUM_URL,
-        ContractArtemis: import.meta.env.CONTRACT_ARTEMIS,
-        ContractMessage: import.meta.env.CONTRACT_MESSAGE,
-        GraphQLUrl: import.meta.env.GRAPHQL_URL,
+        EthereumUrl: import.meta.env.MAIN_VITE_ETHEREUM_URL,
+        ContractArtemis: import.meta.env.MAIN_VITE_CONTRACT_ARTEMIS,
+        ContractMessage: import.meta.env.MAIN_VITE_CONTRACT_MESSAGE,
+        GraphQLUrl: import.meta.env.MAIN_VITE_GRAPHQL_URL,
         Accounts: [],
     }
-    if (import.meta.env.PROD) {
+    if (import.meta.env.DEV)
+        console.log('starting app in development mode...')
+    else if (import.meta.env.PROD) {
         try {
             const raw = utils.FSIO.readRaw(CONFIG_PATH)
             const decrypted = JSON.parse(

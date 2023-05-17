@@ -1,17 +1,20 @@
-import { Inject, Service } from 'typedi'
-import { State, SubscribingStatus } from '@/main/State'
-import { ContractService, MsgCode } from '@/main/services/Contract'
-import { IPFSService } from '@/main/services/IPFS'
-import * as utils from '@/main/utils'
+import { Container, Service } from 'typedi'
+import { State, SubscribingStatus } from '@/State'
+import { ContractService, MsgCode } from '@/services/Contract'
+import { IPFSService } from '@/services/IPFS'
+import * as utils from '@/utils'
 
 @Service()
 export class AccountService {
+    private _state: State
+    private _contractService: ContractService
+    private _ipfsService: IPFSService
     private _timer: ReturnType<typeof setInterval>
-    constructor(
-        @Inject('State') private _state: State,
-        @Inject() private _contractService: ContractService,
-        @Inject() private _ipfsService: IPFSService
-    ) {
+
+    constructor() {
+        this._state = Container.get('State')
+        this._contractService = Container.get(ContractService)
+        this._ipfsService = Container.get(IPFSService)
         this.handleMessage()
         this._timer = setInterval(() => this.handleMessage(), 5 * 60 * 1000)
     }

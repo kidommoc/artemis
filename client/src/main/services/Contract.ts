@@ -1,9 +1,9 @@
 import * as ethers from 'ethers'
-import { Inject, Service } from 'typedi'
+import { Container, Service } from 'typedi'
 
-import { State } from '@/main/State'
-import abiArtemis from '@/main/abi/Artemis.json'
-import abiMessage from '@/main/abi/ArtemisMessage.json'
+import { State } from '@/State'
+import abiArtemis from '@/abi/Artemis.json'
+import abiMessage from '@/abi/ArtemisMessage.json'
 
 export enum MsgCode {
     UNKNOWN,
@@ -14,12 +14,14 @@ export enum MsgCode {
 @Service()
 export class ContractService {
 
+    private _state: State
     private _provider: ethers.providers.JsonRpcProvider
     private _wallet: ethers.Wallet | null
     private _artemis: ethers.Contract | null
     private _message: ethers.Contract | null
 
-    constructor (@Inject('State') private _state: State) {
+    constructor () {
+        this._state = Container.get('State')
         this._provider = new ethers.providers.JsonRpcProvider(this._state.ethereumUrl)
         this._wallet = null
         this._artemis = null
@@ -205,14 +207,14 @@ export class ContractService {
     }
 
     public async getArticleInfo(fileLoc: string):
-        Promise<{ authorAddr: string, title: string, author: string, date: Date, reqSubscribing: boolean }>
+        Promise<{ title: string, publisher: string, publisherAddr: string, date: Date, reqSubscribing: boolean }>
     {
         const result = await this._artemis!.getArticleInfo(fileLoc)
         // check
         return {
-            authorAddr: result.authorAddr,
             title: result.title,
-            author: result.author,
+            publisher: result.author,
+            publisherAddr: result.authorAddr,
             date: new Date(result.date * 1000),
             reqSubscribing: result.reqSubscribing,
         }

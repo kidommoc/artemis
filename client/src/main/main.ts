@@ -1,11 +1,13 @@
 import 'reflect-metadata'
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { Container } from 'typedi'
 
-import * as config from '@/main/config'
-import loader from '@/main/loader'
-import { handles } from '@/main/routes'
+import * as config from '@/config'
+import * as loader from '@/loader'
+import { registerHandlers } from '@/routes'
+import { AccountService } from '@/services/Account'
 
 function createWindow(): void {
     const mainWindow = new BrowserWindow({
@@ -42,9 +44,8 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
     config.load()
-    await loader()
-    for (const [signal, handler] of handles.entries())
-        ipcMain.handle(signal, handler)
+    await loader.load()
+    registerHandlers()
 
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.kidommoc')
@@ -69,8 +70,11 @@ app.whenReady().then(async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
+    const accountService = Container.get(AccountService)
+    accountService.stopMessageHandling()
     if (import.meta.env.PROD)
         config.save()
+    await loader.end()
     if (process.platform !== 'darwin') {
         app.quit()
     }

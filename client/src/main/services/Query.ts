@@ -1,36 +1,35 @@
-import { Inject, Service } from 'typedi'
+import { Container, Service } from 'typedi'
 import * as urql from '@urql/core'
 
-import { State } from '@/main/State'
-import * as utils from '@/main/utils'
-import * as QUERIES from '@/main/graphql'
+import { State } from '@/State'
+import * as utils from '@/utils'
+import * as QUERIES from '@/graphql'
 
-export type AuthorInfo = {
+type PublisherInfo = {
     addr: string,
     name: string,
 }
 
-export type ArticleInfo = {
+type ArticleInfo = {
     cid: string,
     title: string,
-    author: AuthorInfo,
+    publisher: PublisherInfo,
     date: Date,
     reqSubscribing: boolean
 }
 
 @Service()
 export class QueryService {
+    private _state: State
     private _client: urql.Client
 
-    constructor(@Inject('State') private _state: State) {
-        this._client = new urql.Client({
-            url: this._state.graphqlUrl,
-            exchanges: [urql.cacheExchange, urql.fetchExchange]
-        })
+    constructor() {
+        this._state = Container.get('State')
+        this._client = Container.get('urqlClient')
     }
 
-    private toAuthorInfos(data: any[]): AuthorInfo[] {
-        const result: AuthorInfo[] = []
+    private toPublisherInfos(data: any): PublisherInfo[] {
+        const result: PublisherInfo[] = []
         if (!Array.isArray(data))
             return result
         for (const ele of data)
@@ -41,7 +40,7 @@ export class QueryService {
         return result
     }
 
-    private toArticleInfos(data: any[]): ArticleInfo[] {
+    private toArticleInfos(data: any): ArticleInfo[] {
         const result: ArticleInfo[] = []
         if (!Array.isArray(data))
             return result
@@ -49,7 +48,7 @@ export class QueryService {
             result.push({
                 cid: ele.id.toString(),
                 title: ele.title,
-                author: this.toAuthorInfos([ele.author])[0],
+                publisher: this.toPublisherInfos([ele.author])[0],
                 date: new Date(Number(ele.date) * 1000),
                 reqSubscribing: ele.reqSubscribing,
             })
@@ -61,37 +60,38 @@ export class QueryService {
         const text = keywords.join(' & ')
         const QUERY = QUERIES.SEARCH_TITLE
         const result = await this._client.query(QUERY, { text: text })
-        return this.toArticleInfos(result.data!.titleSearch)
+        return this.toArticleInfos(result.data?.titleSearch)
     }
 
-    public async searchAuthor(keywords: string[]): Promise<AuthorInfo[]> {
+    public async searchPublisher(keywords: string[]): Promise<PublisherInfo[]> {
         this._state.checkLogin()
         const text = keywords.join(' & ')
-        const QUERY = QUERIES.SEARCH_AUTHOR
+        const QUERY = QUERIES.SEARCH_PUBLISHER
         const result = await this._client.query(QUERY, { text: text })
-        return this.toAuthorInfos(result.data!.authorSearch)
+        await this.fetchPublisher('0x060da7b0026cc1e522f24a1d593212b51880cd18fbcfa01db35c1c2bdcc817b1')
+        return this.toPublisherInfos(result.data?.authorSearch)
     }
 
-    public async fetchAuthor(addr: string): Promise<ArticleInfo[]> {
+    public async fetchPublisher(addr: string): Promise<ArticleInfo[]> {
         this._state.checkLogin()
-        const QUERY = QUERIES.FETCH_AUTHOR
+        const QUERY = QUERIES.FETCH_PUBLISHER
         const result = await this._client.query(QUERY, { id: addr.toLowerCase() })
-        return this.toArticleInfos(result.data!.artemisArticles)
+        return this.toArticleInfos(result.data?.artemisArticles)
     }
 
-    public async fetchUpdate(): Promise<ArticleInfo[]> {
+    public async fetchUpdate(s?: Date): Promise<ArticleInfo[]> {
         const end = new Date()
         const endTime = Math.floor(end.getTime() / 1000)
-        const start = this._state.lastUpdate
+        const start = s ? s : this._state.lastUpdate
         const startTime = Math.floor(start.getTime() / 1000)
-        const authors: any[] = []
+        const publishers: any[] = []
         for (const ele of this._state.followingList)
-            authors.push({ author_: { id: ele.addr.toLowerCase() }})
+            publishers.push({ author_: { id: ele.addr.toLowerCase() }})
         const QUERY = QUERIES.FETCH_UPDATE(
-            JSON.stringify(authors).replace(/"([^"]+)":/g, '$1:')
+            JSON.stringify(publishers).replace(/"([^"]+)":/g, '$1:')
         )
         const result = await this._client.query(QUERY, { start: startTime, end: endTime })
-        this._state.fetchedUpdate()
-        return this.toArticleInfos(result.data!.artemisArticles)
+        this._state.fetchedUpdatesAt(end)
+        return this.toArticleInfos(result.data?.artemisArticles)
     }
 }

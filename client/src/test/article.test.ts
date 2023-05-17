@@ -6,7 +6,7 @@ import md2h5 from 'md2h5'
 
 import * as utils from '../main/utils'
 import { State } from '../main/State'
-import { type Article, ArticleService } from '../main/services/Article'
+import { type UploadContent, ArticleService } from '../main/services/Article'
 import { AccountService } from '../main/services/Account'
 import { ContractService } from '../main/services/Contract'
 
@@ -23,35 +23,42 @@ let contractService: ContractService
 let cid: string
 let filename1: string
 let filename2: string
-let article1: Article
-let article2: Article
+let article1: UploadContent
+let article2: UploadContent
 
-function generateArticle(path: string, title: string): [Article, string] {
-    const article: Article = { content: '', images: [] }
+function generateArticle(path: string, title: string): [UploadContent, string] {
+    const article: UploadContent = { content: '', images: [] }
     const filename = title.toLowerCase()
         .replace(new RegExp(/[^a-z]+/, 'g'), '-')
         .replace(/-$/, '')
     article.content = md2h5(utils.FSIO.read(path))
-    const htmlRoot = parseHtml(article.content)
+    const htmlRoot = parseHtml(`<div>${article.content}</div>`)
+
+    // extract and insert images
     const imgs = htmlRoot.getElementsByTagName('img')
-    const imgSrc: string[] = []
+    const imgMap: { path: string, hash: string }[] = []
     for (const img of imgs) {
         const src = img.attributes['src']
         const imgPath = resolve(dirname(path), src)
-        const index = imgSrc.findIndex(ele => ele == imgPath)
+        const index = imgMap.findIndex(ele => ele.path == imgPath)
         if (index != -1)
-            img.setAttribute('src', index.toString())
+            img.setAttribute('src', imgMap[index].hash)
         else {
             const imgType = extname(imgPath).slice(1)
             if (!['jpg', 'jpeg', 'png', 'webp'].includes(imgType))
                 throw new Error(`Unsupported image type of "${imgPath}"!`)
             const rawImg = utils.FSIO.readRaw(imgPath)
-            article.images.push(new Blob(
-                [rawImg],
-                { type: `image/${imgType}` }
-            ))
-            imgSrc.push(imgPath)
-            img.setAttribute('src', (imgSrc.length - 1).toString())
+            const hash = utils.Crypto.hash64(rawImg.toString('utf-8'))
+            const index = imgMap.findIndex(ele => ele.hash == hash)
+            if (index == -1) {
+                article.images.push({
+                    hash: hash,
+                    type: `image/${imgType}`,
+                    buffer: rawImg,
+                })
+            }
+            imgMap.push({ path: imgPath, hash: hash })
+            img.setAttribute('src', hash)
         }
     }
     article.content = htmlRoot.toString()
@@ -110,7 +117,7 @@ describe('Test article service', () => {
 
     test('fetch free article', async () => {
         accountService.switchAccount(addrs[1])
-        const fetched = await articleService.fetchArticle(cid, addrs[0])
+        const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article1.content)
         expect(fetched.images.length).toEqual(article1.images.length)
         for (let i = 0; i < fetched.images.length; ++i)
@@ -120,7 +127,7 @@ describe('Test article service', () => {
     test('favourite free article', async () => {
         accountService.switchAccount(addrs[1])
         await articleService.favouriteArticle(cid, title1)
-        const list = articleService.getFavouriteList()
+        const list = state.favouriteList
         expect(list.length).toEqual(1)
         expect(list[0].cid).toEqual(cid)
         expect(list[0].title).toEqual(title1)
@@ -129,7 +136,7 @@ describe('Test article service', () => {
     test('unfavourite free article', async () => {
         accountService.switchAccount(addrs[1])
         await articleService.unfavouriteArticle(cid)
-        expect(articleService.getFavouriteList().length).toEqual(0)
+        expect(state.favouriteList.length).toEqual(0)
     })
 
     test('remove free article', async () => {
@@ -146,7 +153,7 @@ describe('Test article service', () => {
 
     test('fetch paid article by author', async () => {
         accountService.switchAccount(addrs[0])
-        const fetched = await articleService.fetchArticle(cid, addrs[0])
+        const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article2.content)
         expect(fetched.images.length).toEqual(article2.images.length)
         for (let i = 0; i < fetched.images.length; ++i)
@@ -155,7 +162,7 @@ describe('Test article service', () => {
 
     test('cannot fetch paid article by unsubscribing reader', async () => {
         accountService.switchAccount(addrs[1])
-        await expect(articleService.fetchArticle(cid, addrs[0]))
+        await expect(articleService.fetchArticle(cid))
             .rejects.toThrow()
     }, 120 * 1000)
 
@@ -170,7 +177,7 @@ describe('Test article service', () => {
             accountService.switchAccount(addrs[2])
             await accountService.handleMessage()
         }
-        const fetched = await articleService.fetchArticle(cid, addrs[0])
+        const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article2.content)
         expect(fetched.images.length).toEqual(article2.images.length)
         for (let i = 0; i < fetched.images.length; ++i)

@@ -4,7 +4,7 @@ const jestConfig: JestConfigWithTsJest = {
     testEnvironment: 'node',
     roots: ['<rootDir>'],
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
+        '^@/(.*)$': '<rootDir>/src/main/$1',
     },
     extensionsToTreatAsEsm: ['.ts'],
     transform: {

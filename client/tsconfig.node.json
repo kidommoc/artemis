@@ -19,7 +19,7 @@
     "moduleResolution": "nodenext",
     "baseUrl": ".",
     "paths": {
-        "@/*": ["./src/*"]
+        "@/*": ["./src/main/*"]
     },
     "typeRoots": [
         "./node_modules/@types",

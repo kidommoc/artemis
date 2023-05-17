@@ -1,14 +1,16 @@
-import { Inject, Service } from 'typedi'
-import { State } from '@/main/State'
+import { Container, Service } from 'typedi'
+import { State } from '@/State'
 
 @Service()
 export class IPFSService {
+    private _state: State
+    private _node
     private _dlist: { cid: string, date: Date }[] = []
 
-    constructor(
-        @Inject('State') private _state: State,
-        @Inject('IPFSNode') private _node
-    ) {}
+    constructor() {
+        this._state = Container.get('State')
+        this._node = Container.get('IPFSNode')
+    }
 
     private async removePin(cid: string) {
         const CID = (await import('multiformats')).CID
