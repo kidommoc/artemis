@@ -9,7 +9,7 @@ type _Schema_
         }]
     ),
     @fulltext(
-        name: "authorSearch"
+        name: "publisherSearch"
         language: en
         algorithm: rank
         include: [{
@@ -28,7 +28,7 @@ type ArtemisArticle @entity {
     "id = article ipfs address in base58"
     id: String!
     title: String!
-    author: ArtemisPublisher!
+    publisher: ArtemisPublisher!
     date: BigInt!
     reqSubscribing: Boolean!
 }

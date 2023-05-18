@@ -52,12 +52,9 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
     it('should get publisher\'s name', async () => {
         const instA = await Artemis.deployed()
         const account0 = accounts[0]
-        try {
-            const result = await instA.getPublisherName(account0)
-            assert.equal(result, 'AUTHOR0', 'error publisher\'s name')
-        } catch (error) {
-            throw error
-        }
+        const account1 = accounts[1]
+        const result = await instA.getPublisherName.call(account0, { from: account1 })
+        assert.equal(result, 'AUTHOR0', 'error publisher\'s name')
     })
 
     it('should pubKey of accounts[0] is "TESTPUBKEY0"', async () => {
@@ -71,11 +68,7 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
     it('should upload a free test article by accounts[0]', async () => {
         const instA = await Artemis.deployed()
         const account0 = accounts[0]
-        try {
-            await instA.uploadArticle(freeArticleCode, 'free to read!', false, { from: account0 })
-        } catch (error) {
-            assert.equal(0, -1, error)
-        }
+        await instA.uploadArticle(freeArticleCode, 'free to read!', false, { from: account0 })
     })
 
     it('should get info of the free article by accounts[1]', async () => {
@@ -83,9 +76,9 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const account0 = accounts[0]
         const account1 = accounts[1]
         const result = await instA.getArticleInfo.call(freeArticleCode, { from: account1 })
-        assert.equal(result.authorAddr, account0, 'author address error')
+        assert.equal(result.publAddr, account0, 'author address error')
         assert.equal(result.title, 'free to read!', 'title error ')
-        assert.equal(result.author, 'AUTHOR0', 'author name error')
+        assert.equal(result.publisher, 'AUTHOR0', 'author name error')
         assert.equal(result.requireSubscribing, false, 'subscribing requirement error')
     })
 
@@ -172,9 +165,9 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const checkResult = await instM.hasMessage.call({ from: account0 })
         assert.equal(checkResult, true, 'check message error')
         const fetchResult = await instM.fetchMessage.call({ from: account0 })
-        assert.equal(fetchResult.msgSenders[0], account1, 'msg sender error')
-        assert.equal(fetchResult.msgCodes[0], 1, 'msg type error')
-        assert.equal(fetchResult.msgContents[0], 'TESTPUBKEY1', 'msg content error')
+        assert.equal(fetchResult.senders[0], account1, 'sender error')
+        assert.equal(fetchResult.codes[0], 1, 'type error')
+        assert.equal(fetchResult.contents[0], 'TESTPUBKEY1', 'content error')
         try {
             await instM.clearMessage({ from: account0 })
         } catch (error) {
@@ -186,15 +179,21 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const instA = await Artemis.deployed()
         const account0 = accounts[0]
         const account1 = accounts[1]
-        try {
-            let balance0 = await web3.eth.getBalance(account0)
-            console.log(`before admitting, balance of account0 is: ${web3.utils.fromWei(balance0, 'ether')}`)
-            await instA.admitSubscribing(account1, 'TESTENCKEY01', { from: account0 })
-            balance0 = await web3.eth.getBalance(account0)
-            console.log(`after admitting, balance of account0 is: ${web3.utils.fromWei(balance0, 'ether')}`)
-        } catch (error) {
-            assert.equal(0, -1, error)
-        }
+        let balance0 = await web3.eth.getBalance(account0)
+        console.log(`before admitting, balance of account0 is: ${web3.utils.fromWei(balance0, 'ether')}`)
+        await instA.admitSubscribing(account1, 'TESTENCKEY01', { from: account0 })
+        balance0 = await web3.eth.getBalance(account0)
+        console.log(`after admitting, balance of account0 is: ${web3.utils.fromWei(balance0, 'ether')}`)
+    })
+    
+    it('should get subscribing status of account1', async () => {
+        const instA = await Artemis.deployed()
+        const account0 = accounts[0]
+        const account1 = accounts[1]
+        const result = await instA.getSubscribingStatus.call({ from: account1 })
+        assert.equal(result.publ[0], account0, 'publ error')
+        assert.equal(result.status[0], 2, 'status error')
+        console.log(`subscribing time: ${result.time[0]}`)
     })
 
     it('should fetch message by account1', async () => {
@@ -205,9 +204,9 @@ contract('Artemis and ArtemisMessage', async (accounts) => {
         const checkResult = await instM.hasMessage.call({ from: account1 })
         assert.equal(checkResult, true, 'check message error')
         const fetchResult = await instM.fetchMessage.call({ from: account1 })
-        assert.equal(fetchResult.msgSenders[0], account0, 'msg sender error')
-        assert.equal(fetchResult.msgCodes[0], 2, 'msg type error')
-        assert.equal(fetchResult.msgContents[0], 'OK', 'msg content error')
+        assert.equal(fetchResult.senders[0], account0, 'msg sender error')
+        assert.equal(fetchResult.codes[0], 2, 'msg type error')
+        assert.equal(fetchResult.contents[0], 'OK', 'msg content error')
         try {
             await instM.clearMessage({ from: account1 })
         } catch (error) {
