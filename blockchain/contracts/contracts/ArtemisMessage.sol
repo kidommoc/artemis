@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 contract ArtemisMessage {
     struct Message {
         address sender;
-        // 1 means Subscribing Request, 2 means Subscribing Response
+        // 1: Subscribing Request, 2: Subscribing Response
         uint8 code;
         string content;
     }
@@ -24,12 +24,12 @@ contract ArtemisMessage {
     }
 
     function fetchMessage() public view
-        returns (address[] memory msgSenders, uint8[] memory msgCodes, string[] memory msgContents)
+        returns (address[] memory senders, uint8[] memory codes, string[] memory contents)
     {
         Message[] storage msgs = _messages[msg.sender];
-        address[] memory senders = new address[](msgs.length);
-        uint8[] memory codes = new uint8[](msgs.length);
-        string[] memory contents = new string[](msgs.length);
+        senders = new address[](msgs.length);
+        codes = new uint8[](msgs.length);
+        contents = new string[](msgs.length);
         for (uint32 i = 0; i < msgs.length; ++i) {
             senders[i] = msgs[i].sender;
             codes[i] = msgs[i].code;
