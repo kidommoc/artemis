@@ -166,7 +166,7 @@ contract Artemis {
 
     function trimSubscribing() public {
         SubscriberInfo storage subs = _subs[msg.sender];
-        require(subs.lastTrimmedAt == 0 || subs.lastTrimmedAt + 1 weeks > block.timestamp, "too frequent!");
+        require(subs.lastTrimmedAt == 0 || subs.lastTrimmedAt + 12 weeks > block.timestamp, "too frequent!");
         for (uint256 i = 0; i < subs.length; ++i) {
             SubscribingInfo storage info = _publs[subs.publs[i]].subscribers[msg.sender];
             if (info.time < block.timestamp && info.requestTime == 0) {
