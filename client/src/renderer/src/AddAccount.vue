@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { paths, mainColor } from '@renderer/keys'
 import { useAccountStore } from '@renderer/store/account'
 import { useUpdatesStore } from '@renderer/store/updates'
-import { useLogin } from '@renderer/components/login'
+import { useLogin } from '@renderer/login'
 import Dialog from '@renderer/components/Dialog.vue'
 
 const router = useRouter()
@@ -27,7 +27,7 @@ async function addAccount(priKey: string) {
       <p style="margin-bottom: 15px;">
         <router-link :to="paths.login">...back</router-link>
       </p>
-      <input v-model="privateKey" class="prikey" placeholder="account private key" autofocus />
+      <input v-model="privateKey" class="prikey" placeholder="account private key" autofocus @keyup.enter="addAccount(privateKey)"/>
       <div class="row-right">
         <button class="account-confirm" @click="addAccount(privateKey)">CONFIRM</button>
       </div>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { mainColor } from '@renderer/keys'
-import { querySearchTitle, querySearchPublisher } from '@renderer/components/query'
+import { SubscribingStatus } from '@renderer/store/account'
+import { querySearchTitle, querySearchPublisher } from '@renderer/query'
 import MayLoad from '@renderer/components/MayLoad.vue'
 import ArticleList from '@renderer/components/ArticleList.vue'
 import PublisherList from '@renderer/components/PublisherList.vue'
@@ -13,7 +14,7 @@ const articleKeywords = ref('')
 const articleResult = ref<ArticleInfo[]>([])
 const publisherSearched = ref(false)
 const publisherKeywords = ref('')
-const publisherResult = ref<PublisherInfo[]>([])
+const publisherResult = ref<{ info: PublisherInfo, subscribing: SubscribingInfo }[]>([])
 const keywords = ref('')
 const searchType = ref('article')
 const searchArticle = computed(() => searchType.value == 'article')
@@ -27,7 +28,6 @@ const empty = computed(() => {
 })
 
 async function search() {
-    console.log(`search ${keywords.value} as ${searchType.value}`)
     if (searchArticle.value === true) {
         articleResult.value = await querySearchTitle(keywords.value)
         articleSearched.value = true
@@ -35,7 +35,13 @@ async function search() {
     }
 
     if (searchPublisher.value === true) {
-        publisherResult.value = await querySearchPublisher(keywords.value)
+        const result = await querySearchPublisher(keywords.value)
+        publisherResult.value = []
+        for (const ele of result)
+            publisherResult.value.push({
+                info: ele,
+                subscribing: { status: SubscribingStatus.NO },
+            })
         publisherSearched.value = true
         publisherKeywords.value = keywords.value
     }
@@ -46,7 +52,7 @@ async function search() {
   <div id="search">
     <div class="header">
       <div class="row">
-        <input v-model="keywords" class="inputbox" placeholder="enter keywords to search" />
+        <input v-model="keywords" class="inputbox" placeholder="enter keywords to search" @keyup.enter="mayLoad?.update"/>
         <button class="submit" @click="mayLoad?.update">SEARCH</button>
       </div>
       <div class="row">

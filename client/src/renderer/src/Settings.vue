@@ -77,7 +77,7 @@ onMounted(() => {
     </div>
     <div class="card">
       <p class="title">Your Name:</p>
-      <input v-model="name" class="inputbox" placeholder="enter your name" />
+      <input v-model="name" class="inputbox" placeholder="enter your name" @keyup.enter="rename" />
       <button class="submit" @click="rename">SUBMIT</button>
     </div>
     <div class="card">
@@ -99,10 +99,10 @@ onMounted(() => {
   <Dialog v-if="registerDialog" id="register-dialog" :width="400">
     <div v-if="registerStatus === true">
       <p class="discard clickable" @click="registerDialog = false">...discard</p>
-      <input v-model="tempName" class="inputbox" placeholder="a publisher must have a name" />
-      <input v-model="tempPrice" class="inputbox" placeholder="your subscribing price" />
+      <input v-model="tempName" class="inputbox" placeholder="a publisher must have a name" @keyup.enter="register" />
+      <input v-model="tempPrice" class="inputbox" placeholder="your subscribing price" @keyup.enter="register" />
       <div class="row-right">
-        <button class="confirm" @click="register()">CONFIRM</button>
+        <button class="confirm" @click="register">CONFIRM</button>
       </div>
     </div>
     <div v-else>

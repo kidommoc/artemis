@@ -45,7 +45,7 @@ describe('Test account service', () => {
     }, 120 * 1000) // 2mins timeout
 
     test('switch from addr1 to addr0', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         expect(state.ethereumAddr).toEqual(addrs[0])
     })
 
@@ -54,20 +54,20 @@ describe('Test account service', () => {
         expect(state.ethereumAddr).not.toBeDefined()
     })
 
-    test('login account1', () => {
-        accountService.switchAccount(addrs[1])
+    test('login account1', async () => {
+        await accountService.switchAccount(addrs[1])
         expect(state.ethereumAddr).toEqual(addrs[1])
     })
 
     test('register account0 as publisher', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         await accountService.registerPublisher('AUTHOR 0', 0.005)
         const result = await contractService.getPublisherName(addrs[0])
         expect(result).toEqual('AUTHOR 0')
     })
 
     test('rename account0 (publisher)', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         expect(state.isPublisher()).toBeTruthy()
         const name = `AUTHOR ${Math.floor(Math.random() * 10)}`
         await accountService.rename(name)
@@ -76,34 +76,34 @@ describe('Test account service', () => {
     })
     
     test('rename account1 (not publisher)', async () => {
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         expect(state.isPublisher()).toBeFalsy()
         const name = `ACCOUNT ${Math.floor(Math.random() * 10)}`
         await accountService.rename(name)
         expect(state.name).toEqual(name)
     })
 
-    test('check publisher', () => {
-        accountService.switchAccount(addrs[0])
+    test('check publisher', async () => {
+        await accountService.switchAccount(addrs[0])
         expect(state.isPublisher()).toBeTruthy()
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         expect(state.isPublisher()).toBeFalsy()
     })
 
-    test('follow', () => {
-        accountService.switchAccount(addrs[1])
+    test('follow', async () => {
+        await accountService.switchAccount(addrs[1])
         accountService.follow(addrs[0])
         expect(state.followingList.findIndex(ele => ele.addr == addrs[0])).not.toEqual(-1)
     })
 
-    test('unfollow', () => {
-        accountService.switchAccount(addrs[1])
+    test('unfollow', async () => {
+        await accountService.switchAccount(addrs[1])
         accountService.unfollow(addrs[0])
         expect(state.followingList.findIndex(ele => ele.addr == addrs[0])).toEqual(-1)
     })
 
-    test('export and import asymmetic key', () => {
-        accountService.switchAccount(addrs[1])
+    test('export and import asymmetic key', async () => {
+        await accountService.switchAccount(addrs[1])
         const keyPair = state.asymmeticKey
         accountService.exportAsymKeys('testfile')
         state.asymmeticKey = { pub: '', pri: '' }

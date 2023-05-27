@@ -9,22 +9,18 @@ export interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     trick: false,
-    load: async () => { return },
     init: undefined,
 })
 
-let loading = ref(true)
+const loading = ref(true)
 async function load() {
-    console.log('MayLoad loading...')
     if (loading.value === true) {
-        loading.value = true
         await props.load()
         loading.value = false
     }
 }
 
 async function update() {
-    console.log('MayLoad updating')
     loading.value = true
     await load()
 }
@@ -34,7 +30,6 @@ defineExpose({
 })
 
 onMounted(async () => {
-    console.log('MayLoad mounted')
     loading.value = props.init === undefined ? true : props.init
     await load()
 })

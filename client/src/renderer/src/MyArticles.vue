@@ -8,7 +8,7 @@ import MayLoad from '@renderer/components/MayLoad.vue'
 
 const router = useRouter()
 const account = useAccountStore()
-const updateTrick = ref(false)
+const mayLoad = ref<typeof MayLoad | null>(null)
 const myArticles: Ref<{
     ipfsAddress: string,
     title: string,
@@ -21,7 +21,7 @@ async function loadMyArticles() {
 async function removeArticle(title: string) {
     await window.api.article.removeArticle(title)
     myArticles.value = await window.api.article.myArticles()
-    updateTrick.value = !updateTrick.value
+    await mayLoad.value?.update()
 }
 
 function openArticle(ipfsAddress: string) {
@@ -34,7 +34,7 @@ function openPublisher(address: string) {
 </script>
 
 <template>
-  <MayLoad :load="loadMyArticles" :trick="updateTrick">
+  <MayLoad ref="mayLoad" :load="loadMyArticles">
     <div id="my-articles">
       <div class="page-header">
         <h1 class="name clickable" @click="openPublisher(account.data.address)">{{ account.data.name! }}</h1>

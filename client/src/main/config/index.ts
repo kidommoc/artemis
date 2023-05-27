@@ -1,6 +1,6 @@
 import { Container } from 'typedi'
 
-import * as utils from '@/utils'
+import * as utils from '@/utils/index'
 import { State } from '@/State'
 import type { AccountInfo, StateFile } from '@/State'
 
@@ -17,18 +17,15 @@ export function load() {
     }
     if (import.meta.env.DEV)
         console.log('starting app in development mode...')
-    else if (import.meta.env.PROD) {
-        try {
-            const raw = utils.FSIO.readRaw(CONFIG_PATH)
-            const decrypted = JSON.parse(
-                utils.Crypto.symDecrypt(raw, 'state', key).toString('utf-8')
-            )
-            file.Accounts = decrypted.Accounts as AccountInfo[]
-            file.LoginAccountAddress = decrypted.LoginAccountAddress
-        } catch (error) {
-            // handle error
-            throw new Error('Invalid config file!')
-        }
+    try {
+        const raw = utils.FSIO.readRaw(CONFIG_PATH)
+        const decrypted = JSON.parse(
+            utils.Crypto.symDecrypt(raw, 'state', key).toString('utf-8')
+        )
+        file.Accounts = decrypted as AccountInfo[]
+    } catch (error) {
+        // handle error
+        console.log('No account file. Create one.')
     }
 
     const state = new State(file as StateFile)

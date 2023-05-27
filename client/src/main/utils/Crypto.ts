@@ -13,11 +13,11 @@ export class Crypto {
         return this.hash64(accountPriKey)
     }
 
-    public static symEncrypt(data: Buffer, publAddr: string, encryptKey: string)
+    public static symEncrypt(data: Buffer, ivStr: string, encryptKey: string)
         : Buffer
     {
         const iv = crypto.createHash('sha256')
-            .update(publAddr).digest('hex')
+            .update(ivStr).digest('hex')
             .substring(0, 32)
         const cipher = crypto.createCipheriv(
             symmeticAlgorithm,
@@ -27,9 +27,9 @@ export class Crypto {
         return Buffer.concat([cipher.update(data), cipher.final()])
     }
 
-    public static symDecrypt(buffer: Buffer, publAddr: string, encryptKey: string): Buffer {
+    public static symDecrypt(buffer: Buffer, ivStr: string, encryptKey: string): Buffer {
         const iv = crypto.createHash('sha256')
-            .update(publAddr).digest('hex')
+            .update(ivStr).digest('hex')
             .substring(0, 32)
         const decipher = crypto.createDecipheriv(
             symmeticAlgorithm,

@@ -6,7 +6,7 @@ import md2h5 from 'md2h5'
 import { State } from '@/State'
 import { ContractService } from '@/services/Contract'
 import { IPFSService } from '@/services/IPFS'
-import * as utils from '@/utils'
+import * as utils from '@/utils/index'
 
 export type Article = {
     content: string,
@@ -57,7 +57,7 @@ export class ArticleService {
             throw new Error('Not a publisher!')
         const article: UploadContent = { content: '', images: [] }
         const filename = title.toLowerCase()
-            .replace(new RegExp(/[^a-z]+/, 'g'), '-')
+            .replace(new RegExp(/[^a-z0-9]+/, 'g'), '-')
             .replace(/-$/, '')
         article.content = md2h5(utils.FSIO.read(path))
         const htmlRoot = parseHtml(`<div>${article.content}</div>`)
@@ -99,7 +99,7 @@ export class ArticleService {
                 return compressed
             const encrypted = utils.Crypto.symEncrypt(
                 compressed,
-                this._state.ethereumAddr,
+                title,
                 utils.Crypto.getSymEncKey(this._state.ethereumAccountPrivateKey),
             )
             return encrypted
@@ -115,7 +115,13 @@ export class ArticleService {
     }
 
     public async fetchArticle(ipfsAddr: string): Promise<Article>  {
-        const permission = await this._contracts.accessArticle(ipfsAddr)
+        const permission = await (async () => {
+            try {
+                return await this._contracts.accessArticle(ipfsAddr)
+            } catch (error) {
+                throw new Error('Inexist article!')
+            }
+        })()
         if (!permission.permission)
             throw new Error('No access permission!')
         const info = await this._contracts.getArticleInfo(ipfsAddr)
@@ -131,7 +137,7 @@ export class ArticleService {
                     this._state.asymmeticKey.pri
                 )
             })()
-            return utils.Crypto.symDecrypt(fetched, info.publisherAddr, encKey)
+            return utils.Crypto.symDecrypt(fetched, info.title, encKey)
         })()
         const decompressed = JSON.parse(
             utils.Compression.decompress(compressed)

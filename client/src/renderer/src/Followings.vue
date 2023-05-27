@@ -17,7 +17,7 @@ async function loadFollowings() {
         <h1 style="margin: 0;">Followings</h1>
       </div>
       <p v-if="account.data.followings.length === 0">You havn't followed any publisher yet!</p>
-      <PublisherList :list="account.data.followings" :unfollow="true" />
+      <PublisherList :list="account.data.followings" :unfollow="true" :subscribing="true" />
     </div>
   </MayLoad>
 </template>

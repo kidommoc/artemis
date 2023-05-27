@@ -5,12 +5,9 @@ import account from '@/routes/account'
 import article from '@/routes/article'
 import query from '@/routes/query'
 
-import { AccountAPI as accountApi } from '@/routes/account'
-import { ArticleAPI as articleApi } from '@/routes/article'
-import { QueryAPI as queryApi } from '@/routes/query'
-export type { AccountAPI } from '@/routes/account'
-export type { ArticleAPI } from '@/routes/article'
-export type { QueryAPI } from '@/routes/query'
+import { AccountAPI } from '@/routes/account'
+import { ArticleAPI  } from '@/routes/article'
+import { QueryAPI  } from '@/routes/query'
 
 const OPEN_FILE = 'dialog:OpenFile'
 const temp = {
@@ -31,14 +28,14 @@ for (const [ key, value ] of Object.entries(query)) {
     temp.query[keyStr] = (...args) => ipcRenderer.invoke(value.signal, ...args)
 }
 export const api: {
-    account: accountApi,
-    article: articleApi,
-    query: queryApi,
+    account: AccountAPI,
+    article: ArticleAPI,
+    query: QueryAPI,
     openFile: () => Promise<any>,
 } = {
-    account: temp.account as unknown as accountApi,
-    article: temp.article as unknown as articleApi,
-    query: temp.query as unknown as queryApi,
+    account: temp.account as unknown as AccountAPI,
+    article: temp.article as unknown as ArticleAPI,
+    query: temp.query as unknown as QueryAPI,
     openFile: () => ipcRenderer.invoke(OPEN_FILE)
 }
 
@@ -47,19 +44,19 @@ export async function registerHandlers() {
     for (const [ , value ] of Object.entries(account))
         ipcMain.handle(value.signal, async (event, ...args) => {
             const result = await value.function(...args)
-            console.log(`event: ${value.signal}, result:\n${JSON.stringify(result)}`)
+            console.log(`event: ${value.signal}, from: ${event.sender.id}\nresult:\n${JSON.stringify(result)}`)
             return result
         })
     for (const [ , value ] of Object.entries(article))
         ipcMain.handle(value.signal, async (event, ...args) => {
             const result = await value.function(...args)
-            console.log(`event: ${value.signal}, result:\n${JSON.stringify(result)}`)
+            console.log(`event: ${value.signal}, from: ${event.sender.id}\nresult:\n${JSON.stringify(result)}`)
             return result
         })
     for (const [ , value ] of Object.entries(query))
         ipcMain.handle(value.signal, async (event, ...args) => {
             const result = await value.function(...args)
-            console.log(`event: ${value.signal}, result:\n${JSON.stringify(result)}`)
+            console.log(`event: ${value.signal}, from: ${event.sender.id}\nresult:\n${JSON.stringify(result)}`)
             return result
         })
     ipcMain.handle(OPEN_FILE, async (): Promise<string | undefined> => {

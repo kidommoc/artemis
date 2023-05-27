@@ -5,18 +5,20 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
     main: {
         build: {
-            outDir: 'dist/main'
+            outDir: 'out/main',
         },
         resolve: {
             alias: {
                 '@': resolve('src\\main')
             }
         },
-        plugins: [externalizeDepsPlugin()]
+        plugins: [
+            externalizeDepsPlugin(),
+        ]
     },
     preload: {
         build: {
-            outDir: 'dist/preload'
+            outDir: 'out/preload',
         },
         resolve: {
             alias: {
@@ -27,7 +29,7 @@ export default defineConfig({
     },
     renderer: {
         build: {
-            outDir: 'dist/renderer'
+            outDir: 'out/renderer',
         },
         resolve: {
             alias: {

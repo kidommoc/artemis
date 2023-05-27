@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { mainColor, paths } from '@renderer/keys'
 import { useAccountStore } from '@renderer/store/account'
-import { useLogin } from '@renderer/components/login'
+import { useLogin } from '@renderer/login'
 import { useUpdatesStore } from '@renderer/store/updates'
 import Dialog from '@renderer/components/Dialog.vue'
 

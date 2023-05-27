@@ -116,7 +116,7 @@ const queryRouter: QueryRouter = {
         {
             const state: State = Container.get('State')
             const service = Container.get(QueryService)
-            const from = state.lastUpdate
+            const from = state.lastUpdated
             const result =  await service.fetchUpdate()
             const list: ArticleInfo[] = []
             for (const ele of result)
@@ -130,7 +130,7 @@ const queryRouter: QueryRouter = {
                     date: ele.date,
                     reqSubscribing: ele.reqSubscribing,
                 })
-            const to = state.lastUpdate
+            const to = state.lastUpdated
             return {
                 from: from, to: to,
                 infos: list,

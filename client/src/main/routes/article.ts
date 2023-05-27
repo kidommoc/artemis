@@ -1,14 +1,15 @@
 import { Container } from 'typedi'
 import { State } from '@/State'
+import type { ArticleInfo, Article } from '@/routes/types'
 import { ArticleService } from '@/services/Article'
-import type { Article } from '@/routes/types'
 import { ContractService } from '@/services/Contract'
 
 export interface ArticleAPI {
+    getArticleInfo(ipfsAddress: string): Promise<ArticleInfo | undefined>
     myArticles(): Promise<{ ipfsAddress: string, title: string }[]>
     uploadArticle(path: string, title: string, reqSubscribing: boolean): Promise<void>
     removeArticle(title: string): Promise<void>
-    fetchArticle(ipfsAddress: string): Promise<Article>
+    fetchArticle(ipfsAddress: string): Promise<Article | null | undefined>
     getFavouriteList(): Promise<{ ipfsAddress: string, title: string }[]>
     isFavouriting(ipfsAddress: string): Promise<boolean>
     favouriteArticle(ipfsAddress: string): Promise<void>
@@ -16,6 +17,7 @@ export interface ArticleAPI {
 }
 
 export interface ArticleRouter {
+    getArticleInfo: any,
     myArticles: any,
     uploadArticle: any,
     removeArticle: any,
@@ -27,9 +29,36 @@ export interface ArticleRouter {
 }
 
 const articleRouter: ArticleRouter = {
+    getArticleInfo: {
+        signal: 'article:GetArticleInfo',
+        function: async function(...args)
+            : Promise<ArticleInfo | undefined>
+        {
+            // check
+            const ipfsAddress = args[0]
+            const service = Container.get(ContractService)
+            try {
+                const result = await service.getArticleInfo(ipfsAddress)
+                return {
+                    ipfsAddress: ipfsAddress,
+                    title: result.title,
+                    publisher: {
+                        address: result.publisherAddr,
+                        name: result.publisher,
+                    },
+                    date: result.date,
+                    reqSubscribing: result.reqSubscribing,
+                }
+            } catch (error) {
+                return undefined
+            }
+        }
+    },
     myArticles: {
         signal: 'article:MyArticles',
-        function: async function (...args): Promise<{ ipfsAddress: string, title: string}[]> {
+        function: async function (...args)
+            : Promise<{ ipfsAddress: string, title: string}[]>
+        {
             const service = Container.get(ArticleService)
             const articles = await service.myArticles()
             const list: { ipfsAddress: string, title: string}[] = []
@@ -63,32 +92,30 @@ const articleRouter: ArticleRouter = {
     },
     fetchArticle: {
         signal: 'article:FetchArticle',
-        function: async function (...args): Promise<Article> {
+        function: async function (...args): Promise<Article | null | undefined> {
             // check
             const ipfsAddress = args[0]
-            const article = Container.get(ArticleService)
-            const contract = Container.get(ContractService)
-            const info = await contract.getArticleInfo(ipfsAddress)
-            const result =  await article.fetchArticle(ipfsAddress)
-            return {
-                info: {
-                    ipfsAddress: ipfsAddress,
-                    title: info.title,
-                    publisher: {
-                        address: info.publisherAddr,
-                        name: info.publisher,
-                    },
-                    date: info.date,
-                    reqSubscribing: info.reqSubscribing,    
-                },
-                content: result.content,
-                images: result.images,
+            const service = Container.get(ArticleService)
+            try {
+                const result = await service.fetchArticle(ipfsAddress)
+                return {
+                    content: result.content,
+                    images: result.images,
+                }
+            } catch (error) {
+                if ((error as Error).message == 'No access permission!')
+                    return undefined
+                if ((error as Error).message == 'Inexist article!')
+                    return null
+                throw error
             }
         }
     },
     getFavouriteList: {
         signal: 'article:GetFavouriteList',
-        function: async function(...args): Promise<{ ipfsAddress: string, title: string }[]> {
+        function: async function(...args)
+            : Promise<{ ipfsAddress: string, title: string }[]>
+        {
             const state: State = Container.get('State')
             const list: { ipfsAddress: string, title: string }[] = []
             for (const ele of state.favouriteList)
@@ -105,10 +132,7 @@ const articleRouter: ArticleRouter = {
             // check
             const ipfsAddress = args[0]
             const state: State = Container.get('State')
-            const index = state.favouriteList.findIndex(ele => ele.cid == ipfsAddress)
-            if (index === -1)
-                return false
-            return true
+            return state.isFavouriting(ipfsAddress)
         }
     },
     favouriteArticle: {

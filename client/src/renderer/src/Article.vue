@@ -1,22 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { paths, mainColor, subColor } from '@renderer/keys'
-import { formatDateTime } from '@renderer/components/dateFormatter'
+import { formatDateTime } from '@renderer/dateFormatter'
 import MayLoad from '@renderer/components/MayLoad.vue';
 
 const updateTrick = ref(false)
 const route = useRoute()
 const router = useRouter()
-let article = ref<Article | undefined>(undefined)
+const inexist = ref(false)
+const access = ref(true)
+const info = ref<ArticleInfo | undefined>(undefined)
+const article = ref<Article | undefined>(undefined)
 const isFavourite = ref(false)
 const imgs = ref<Blob[]>([])
+const address = computed(() => route.params.addr as string)
 
 async function loadArticle() {
-    article.value = await window.api.article.fetchArticle(route.params.addr as string)
-    if (!article.value)
-        throw new Error('Empty article!')
-    isFavourite.value = await window.api.article.isFavouriting(route.params.addr as string)
+    info.value = await window.api.article.getArticleInfo(address.value)
+    if (!info.value) {
+        inexist.value = true
+        return
+    }
+    const result = await window.api.article.fetchArticle(address.value)
+    if (result === null) {
+        inexist.value = true
+        return
+    }
+    if (result === undefined) {
+        access.value = false
+        return
+    }
+    article.value = result as Article
+    isFavourite.value = await window.api.article.isFavouriting(address.value)
 
     // create urls for images
     for (const img of article.value.images) {
@@ -43,35 +59,41 @@ async function loadArticle() {
 
 async function favourite(ipfsAddress: string) {
     await window.api.article.favouriteArticle(ipfsAddress)
-    isFavourite.value = await window.api.article.isFavouriting(route.params.addr as string)
+    isFavourite.value = await window.api.article.isFavouriting(address.value)
     updateTrick.value = !updateTrick.value
 }
 
 async function unfavourite(ipfsAddress: string) {
     await window.api.article.unfavouriteArticle(ipfsAddress)
-    isFavourite.value = await window.api.article.isFavouriting(route.params.addr as string)
+    isFavourite.value = await window.api.article.isFavouriting(address.value)
     updateTrick.value = !updateTrick.value
 }
 </script>
 
 <template>
-  <MayLoad :load="loadArticle" :trick="updateTrick">
+  <MayLoad :load="loadArticle">
     <div id="article">
       <p class="back clickable" @click="router.go(-1)">...back</p>
-      <div class="page-header">
-        <div class="row">
-          <h1 class="title">{{ article!.info.title }}</h1>
-          <button v-if="isFavourite" class="fav" @click="unfavourite(article!.info.ipfsAddress)">Unfavourite</button>
-          <button v-else class="fav" @click="favourite(article!.info.ipfsAddress)">Favourite</button>
-        </div>
-        <div class="row">
-          <p><router-link :to="paths.publisher(article!.info.publisher.address)">
-            {{ article!.info.publisher.name }}
-          </router-link></p>
-          <p class="info">{{ formatDateTime(article!.info.date) }}</p>
-        </div>
+      <div v-if="inexist">
+          <h2>Inexist article!</h2>
       </div>
-      <div v-html="article!.content" id="content"></div>
+      <div v-else>
+        <div class="page-header">
+          <div class="row">
+            <h1 class="title">{{ info!.title }}</h1>
+            <button v-if="isFavourite" class="fav" @click="unfavourite(info!.ipfsAddress)">Unfavourite</button>
+            <button v-else class="fav" @click="favourite(info!.ipfsAddress)">Favourite</button>
+          </div>
+          <div class="row">
+            <p><router-link :to="paths.publisher(info!.publisher.address)">
+              {{ info!.publisher.name }}
+            </router-link></p>
+            <p class="info">{{ formatDateTime(info!.date) }}</p>
+          </div>
+        </div>
+        <div v-if="access" v-html="article!.content" id="content"></div>
+        <h2 v-else>You have no access permission of this article! Please subscriber its publisher first!</h2>
+      </div>
     </div>
   </MayLoad>
 </template>

@@ -3,7 +3,7 @@ query SearchTitle($text: String!) {
     titleSearch(text: $text) {
         id,
         title,
-        author {
+        publisher {
             id,
             name
         },
@@ -14,7 +14,7 @@ query SearchTitle($text: String!) {
 
 export const SEARCH_PUBLISHER = `
 query SearchPublisher($text: String!) {
-    authorSearch(text: $text) {
+    publisherSearch(text: $text) {
         id,
         name
     }
@@ -23,11 +23,11 @@ query SearchPublisher($text: String!) {
 export const FETCH_PUBLISHER = `
 query FetchPublisher($id: Bytes!) {
     artemisArticles(orderBy: date, orderDirection: desc,
-        where: { author_: { id: $id }}
+        where: { publisher_: { id: $id }}
     ) {
         id,
         title,
-        author {
+        publisher {
             id, name
         },
         date,
@@ -35,18 +35,18 @@ query FetchPublisher($id: Bytes!) {
     }
 }`
 
-export const FETCH_UPDATE = (authors): string => `
+export const FETCH_UPDATE = (publishers): string => `
 query FetchUpdate($start: BigInt!, $end: BigInt!) {
     artemisArticles(orderBy: date, orderDirection: desc,
         where: { and: [
             { date_gte: $start },
             { date_lte: $end },
-            { or: ${authors} }
+            { or: ${publishers} }
         ]}
     ) {
         id,
         title,
-        author {
+        publisher {
             id, name
         },
         date,

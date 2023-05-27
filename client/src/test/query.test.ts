@@ -47,7 +47,7 @@ async function generateArticles() {
             addrCode += Math.floor(i % 100)
         const addr = toAddr(addrCode)
         const title = `test title ${i}`
-        accountService.switchAccount(addrs[contractNo])
+        await accountService.switchAccount(addrs[contractNo])
         await contractService.uploadArticle(addr, title, reqSub)
         cids[contractNo].push(addr)
         log += `uploaded test article${i} by account${contractNo + 4} at ADDR(${addrCode}), require subscribing: ${reqSub}.\n`
@@ -83,20 +83,20 @@ describe('Test query service:', () => {
         queryService = Container.get(QueryService)
         accountService = Container.get(AccountService)
         await accountService.addAccount(accountPriKeys[0])
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         // await accountService.registerPublisher('AUTHOR 7', 0.05)
         await accountService.addAccount(accountPriKeys[1])
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         // await accountService.registerPublisher('AUTHOR 8', 0.05)
         await accountService.addAccount(accountPriKeys[2])
-        accountService.switchAccount(addrs[2])
+        await accountService.switchAccount(addrs[2])
         // await accountService.registerPublisher('AUTHOR 9', 0.05)
 
         await generateArticles()
         // wait graphql to form database
         // await new Promise(resolve => setTimeout(resolve, 10 * 60 * 1000))
 
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         accountService.follow(addrs[1])
         accountService.follow(addrs[2])
 
@@ -121,7 +121,7 @@ describe('Test query service:', () => {
     })
 
     test('fetch update', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         const start = new Date(new Date().getTime() - 86400 * 1000)
         const result = await queryService.fetchUpdate(start)
         console.log(result)
@@ -130,13 +130,13 @@ describe('Test query service:', () => {
 
     afterAll(async () => {
         /*
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         for await (const cid of cids[0])
             await contractService.removeArticle(cid)
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         for await (const cid of cids[1])
             await contractService.removeArticle(cid)
-        accountService.switchAccount(addrs[2])
+        await accountService.switchAccount(addrs[2])
         for await (const cid of cids[2])
             await contractService.removeArticle(cid)
         */

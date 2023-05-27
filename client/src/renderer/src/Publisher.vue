@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { mainColor, subColor } from '@renderer/keys'
 import { useAccountStore } from '@renderer/store/account'
-import { formatDate } from '@renderer/components/dateFormatter'
-import { queryFetchPublisher } from '@renderer/components/query'
+import { SubscribingStatus } from '@renderer/store/account'
+import { formatDate } from '@renderer/dateFormatter'
+import { queryFetchPublisher } from '@renderer/query'
 import Dialog from '@renderer/components/Dialog.vue'
 import MayLoad from '@renderer/components/MayLoad.vue'
 import ArticleList from '@renderer/components/ArticleList.vue'
@@ -15,33 +15,16 @@ const router = useRouter()
 const account = useAccountStore()
 const name = ref('')
 const price = ref(0)
-const articles: Ref<ArticleInfo[]> = ref([])
-const subscribingType = ref(0)
-const subscribingTime: Ref<Date> = ref(new Date())
+const articles = ref<ArticleInfo[]>([])
+const subscribingInfo = ref<SubscribingInfo>({ status: SubscribingStatus.NO })
 const subscribingDialog = ref(false)
 const address = computed(() => route.params.addr as string)
-const following = computed(() => account.data.followings.findIndex(ele => ele.address == address.value) !== -1)
+const isFollowing = computed(() => account.data.followings.findIndex(ele => ele.info.address == address.value) !== -1)
 const subscribeColor = (month: number) => {
     if (account.data.balance >= month * price.value)
         return mainColor
     else
         return subColor
-}
-
-async function loadSubscribingStatus() {
-    const st = await window.api.account.getSubscribingTime(address.value)
-    if (st === undefined)
-        subscribingType.value = 0
-    if (st instanceof Date) {
-        subscribingType.value = 2
-        subscribingTime.value = st
-    }
-    if (typeof st === 'string') {
-        if (st == 'NO')
-            subscribingType.value = 0
-        if (st == 'REQ')
-            subscribingType.value = 1
-    }
 }
 
 async function loadPublisherArticles() {
@@ -50,8 +33,13 @@ async function loadPublisherArticles() {
     if (!n)
         throw new Error('Inexist publisher!')
     name.value = n
-    price.value = await window.api.query.getSubscribingPrice(address.value)
-    await loadSubscribingStatus()
+    price.value = await (async () => {
+      const result = await window.api.query.getSubscribingPrice(address.value)
+      if (result)
+          return result
+      return 0
+    })()
+    subscribingInfo.value = await window.api.account.getSubscribingStatus(address.value)
     articles.value = await queryFetchPublisher(address.value)
 }
 
@@ -66,10 +54,9 @@ async function unfollow() {
 }
 
 async function subscribe(month: number) {
-    console.log(`Subscrime ${month} months, pay ${price.value * month} ETH`)
-    // await window.api.account.subscribe(address.value, month)
+    await window.api.account.subscribe(address.value, month)
     await account.update()
-    // await loadSubscribingStatus()
+    subscribingInfo.value = await window.api.account.getSubscribingStatus(address.value)
     subscribingDialog.value = false
 }
 </script>
@@ -82,14 +69,14 @@ async function subscribe(month: number) {
         <div class="info-left">
           <h2 class="name">{{ name }}</h2>
           <p class="info">{{ address }}</p>
-          <p v-if="subscribingType === 1" class="info">Requesting Subscribing</p>
-          <p v-if="subscribingType === 2" class="info">
-            Subscribing to {{ formatDate(subscribingTime) }}
+          <p v-if="subscribingInfo.status == SubscribingStatus.REQ" class="info">Requesting Subscribing</p>
+          <p v-if="subscribingInfo.status == SubscribingStatus.YES" class="info">
+            Subscribing to {{ formatDate(subscribingInfo.time!) }}
           </p>
         </div>
         <div class="info-right">
-          <button v-if="!following" class="submit" @click="follow">FOLLOW</button>
-          <button v-if="following" class="submit" @click="unfollow">UNFOLLOW</button>
+          <button v-if="!isFollowing" class="submit" @click="follow">FOLLOW</button>
+          <button v-if="isFollowing" class="submit" @click="unfollow">UNFOLLOW</button>
           <button class="submit" @click="subscribingDialog = true" style="background-color: burlywood">
             SUBSCRIBE
           </button>

@@ -1,19 +1,19 @@
 import { Container } from 'typedi'
 import { State } from '@/State'
-import { SubscribingStatus } from '@/State'
+import type { SubscribingInfo } from '@/State'
 import { AccountService } from '@/services/Account'
 import { ContractService } from '@/services/Contract'
 import type { PublisherInfo } from '@/routes/types'
 
 export interface AccountAPI {
     getAccountList(): { accountAddress: string, name?: string }[]
-    getAccountAddress(): Promise<string | undefined>
-    getAccountPrivateKey(): Promise<string | undefined>
-    getAccountBalance(): Promise<number | undefined>
-    isPublisher(): Promise<boolean | undefined>
-    getName(): Promise<string | undefined>
-    getLastUpdateds(): Promise<Date>
-    fetchedUpdateds(): Promise<void>
+    getAccountAddress(): Promise<string>
+    getAccountPrivateKey(): Promise<string>
+    getAccountBalance(): Promise<number>
+    isPublisher(): Promise<boolean>
+    getName(): Promise<string>
+    getLastUpdated(): Promise<Date>
+    fetchedUpdates(date: Date): Promise<void>
     addAccount(accountPrivateKey: string): Promise<string>
     login(accountAddress: string): Promise<void>
     logout(): Promise<void>
@@ -21,14 +21,12 @@ export interface AccountAPI {
     rename(newName: string): Promise<void>
     registerAsPublisher(name: string, price: number): Promise<void>
     setSubscribingPrice(price: number): Promise<void>
-    getFollowingList(): Promise<PublisherInfo[] | undefined>
+    getFollowingList(): Promise<{ info: PublisherInfo, subscribing: SubscribingInfo }[]>
     isFollowing(publisherAddress: string): Promise<boolean>
     follow(publisherAddress: string): Promise<void>
     unfollow(publisherAddress: string): Promise<void>
+    getSubscribingStatus(publisherAddress: string): Promise<SubscribingInfo>
     subscribe(publisherAddress: string, months: number): Promise<void>
-    getSubscribingTime(publisherAddress: string): Promise<Date | string>
-    importAsymmeticKeys(path: string): Promise<void>
-    exportAsymmeticKeys(path: string): Promise<void>
 }
 
 export interface AccountRouter {
@@ -38,7 +36,7 @@ export interface AccountRouter {
     getAccountBalance: any
     isPublisher: any
     getName: any
-    getLastUpdates,
+    getLastUpdated,
     fetchedUpdates,
     addAccount: any
     login: any
@@ -51,10 +49,8 @@ export interface AccountRouter {
     isFollowing: any
     follow: any
     unfollow: any
+    getSubscribingStatus: any
     subscribe: any
-    getSubscribingTime: any
-    importAsymmeticKeys: any
-    exportAsymmeticKeys: any
 }
 
 const accountRouter: AccountRouter = {
@@ -84,62 +80,48 @@ const accountRouter: AccountRouter = {
     },
     getAccountPrivateKey: {
         signal: 'account:GetAccountPrivateKey',
-        function: async function (...args): Promise<string | undefined> {
+        function: async function (...args): Promise<string> {
             const state: State = Container.get('State')
-            try {
-                return state.ethereumAccountPrivateKey
-            } catch (error) {
-                return undefined
-            }
+            return state.ethereumAccountPrivateKey
         }
     },
     getAccountBalance: {
         signal: 'account:GetAccountBalance',
-        function: async function (...args): Promise<number | undefined> {
+        function: async function (...args): Promise<number> {
             const service = Container.get(ContractService)
-            try {
-                return await service.getBalance()
-            } catch (error) {
-                return undefined
-            }
+            return await service.getBalance()
         }
     },
     isPublisher: {
         signal: 'account:IsPublisher',
-        function: async function (...args): Promise<boolean | undefined> {
+        function: async function (...args): Promise<boolean> {
             const state: State = Container.get('State')
-            try {
-                return state.isPublisher()
-            } catch (error) {
-                return undefined
-            }
+            return state.isPublisher()
         }
     },
     getName: {
         signal: 'account:GetName',
         function: async function (...args): Promise<string | undefined> {
             const state: State = Container.get('State')
-            try {
-                if (state.name)
-                    return state.name
-                return undefined
-            } catch (error) {
-                return undefined
-            }
+            if (state.name)
+                return state.name
+            return undefined
         }
     },
-    getLastUpdates: {
-        signal: 'account:GetLastUpdates',
+    getLastUpdated: {
+        signal: 'account:GetLastUpdated',
         function: async function (...args): Promise<Date> {
             const state: State = Container.get('State')
-            return state.lastUpdate
+            return state.lastUpdated
         }
     },
     fetchedUpdates: {
         signal: 'account:FetchedUpdates',
         function: async function (...args): Promise<void> {
+            // check
+            const date = args[0]
             const state: State = Container.get('State')
-            state.fetchedUpdatesAt(new Date())
+            state.fetchedUpdatesAt(date)
         }
     },
     addAccount: {
@@ -159,7 +141,7 @@ const accountRouter: AccountRouter = {
             // check
             const accountAddress = args[0]
             const service = Container.get(AccountService)
-            service.switchAccount(accountAddress)
+            await service.switchAccount(accountAddress)
         },
     },
     logout: {
@@ -175,7 +157,7 @@ const accountRouter: AccountRouter = {
             // check
             const accountAddress = args[0]
             const service = Container.get(AccountService)
-            service.switchAccount(accountAddress)
+            await service.switchAccount(accountAddress)
         },
     },
     rename: {
@@ -208,19 +190,22 @@ const accountRouter: AccountRouter = {
     },
     getFollowingList: {
         signal: 'account:GetFollowingList',
-        function: async function (...args): Promise<PublisherInfo[] | undefined> {
+        function: async function (...args)
+            : Promise< { info: PublisherInfo, subscribing: SubscribingInfo }[]>
+        {
             const state: State = Container.get('State')
-            try {
-                const list: PublisherInfo[] = []
-                for (const ele of state.followingList)
-                    list.push({
+            const service = Container.get(AccountService)
+            await service.updateSubscribing()
+            const list: any[] = []
+            for (const ele of state.followingList)
+                list.push({
+                    info: {
                         address: ele.addr,
                         name: ele.name,
-                    })
-                return list
-            } catch (error) {
-                return undefined
-            }
+                    },
+                    subscribing: state.subscribingStatusOf(ele.addr),
+                })
+            return list
         }
     },
     isFollowing: {
@@ -253,6 +238,17 @@ const accountRouter: AccountRouter = {
             service.unfollow(publisherAddress)
         },
     },
+    getSubscribingStatus: {
+        signal: 'account:GetSubsribingStatus',
+        function: async function (...args): Promise<SubscribingInfo> {
+            // check
+            const publisherAddress = args[0]
+            const state: State = Container.get('State')
+            const service = Container.get(AccountService)
+            await service.updateSubscribing()
+            return state.subscribingStatusOf(publisherAddress)
+        },
+    },
     subscribe: {
         signal: 'account:Subscribe',
         function: async function (...args) {
@@ -261,47 +257,7 @@ const accountRouter: AccountRouter = {
             const months = args[1]
             const service = Container.get(AccountService)
             await service.subscribe(publisherAddress, months)
-        },
-    },
-    getSubscribingTime: {
-        signal: 'account:GetSubsribingTime',
-        function: async function (...args): Promise<Date | string | undefined> {
-            // check
-            const publisherAddress = args[0]
-            const state: State = Container.get('State')
-            const service = Container.get(ContractService)
-            const result = await service.getSubscribingTime(publisherAddress)
-            if (result)
-                return result
-            else {
-                const type = state.subscribingStatus(publisherAddress)
-                switch (type) {
-                    case SubscribingStatus.NO:
-                        return 'NO'
-                    case SubscribingStatus.REQ:
-                        return 'REQ'
-                    default:
-                        return undefined
-                }
-            }
-        },
-    },
-    importAsymmeticKeys: {
-        signal: 'account:ImportAsymmeticKeys',
-        function: async function (...args) {
-            // check
-            const path = args[0]
-            const service = Container.get(AccountService)
-            service.importAsymKeys(path)
-        },
-    },
-    exportAsymmeticKeys: {
-        signal: 'account:ExportAsymmeticKeys',
-        function: async function (...args) {
-            // check
-            const path = args[0]
-            const service = Container.get(AccountService)
-            service.exportAsymKeys(path)
+            await service.updateSubscribing()
         },
     },
 }

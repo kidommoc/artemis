@@ -48,7 +48,7 @@ export class QueryService {
             result.push({
                 cid: ele.id.toString(),
                 title: ele.title,
-                publisher: this.toPublisherInfos([ele.author])[0],
+                publisher: this.toPublisherInfos([ele.publisher])[0],
                 date: new Date(Number(ele.date) * 1000),
                 reqSubscribing: ele.reqSubscribing,
             })
@@ -69,7 +69,7 @@ export class QueryService {
         const QUERY = QUERIES.SEARCH_PUBLISHER
         const result = await this._client.query(QUERY, { text: text })
         await this.fetchPublisher('0x060da7b0026cc1e522f24a1d593212b51880cd18fbcfa01db35c1c2bdcc817b1')
-        return this.toPublisherInfos(result.data?.authorSearch)
+        return this.toPublisherInfos(result.data?.publisherSearch)
     }
 
     public async fetchPublisher(addr: string): Promise<ArticleInfo[]> {
@@ -82,11 +82,11 @@ export class QueryService {
     public async fetchUpdate(s?: Date): Promise<ArticleInfo[]> {
         const end = new Date()
         const endTime = Math.floor(end.getTime() / 1000)
-        const start = s ? s : this._state.lastUpdate
+        const start = s ? s : this._state.lastUpdated
         const startTime = Math.floor(start.getTime() / 1000)
         const publishers: any[] = []
         for (const ele of this._state.followingList)
-            publishers.push({ author_: { id: ele.addr.toLowerCase() }})
+            publishers.push({ publisher_: { id: ele.addr.toLowerCase() }})
         const QUERY = QUERIES.FETCH_UPDATE(
             JSON.stringify(publishers).replace(/"([^"]+)":/g, '$1:')
         )

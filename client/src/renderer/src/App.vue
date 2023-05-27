@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import Sidebar from '@renderer/components/Sidebar.vue'
-
-onMounted(() => {
-    console.log('App mounted')
-})
 </script>
 
 <template>

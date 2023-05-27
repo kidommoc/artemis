@@ -72,8 +72,7 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', async () => {
     const accountService = Container.get(AccountService)
     accountService.stopMessageHandling()
-    if (import.meta.env.PROD)
-        config.save()
+    config.save()
     await loader.end()
     if (process.platform !== 'darwin') {
         app.quit()

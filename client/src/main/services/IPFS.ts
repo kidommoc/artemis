@@ -27,7 +27,7 @@ export class IPFSService {
     private async clearPins() {
         const expired = new Date().getTime() - 30 * 86400 * 1000
         for (let i = 0; i < this._dlist.length; ++i) {
-            if (this._state.isFavourite(this._dlist[i].cid))
+            if (this._state.isFavouriting(this._dlist[i].cid))
                 continue
             if (this._dlist[i].date.getTime() < expired) {
                 await this.removePin(this._dlist[i].cid)

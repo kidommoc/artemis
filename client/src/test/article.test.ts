@@ -5,7 +5,7 @@ import { dirname, extname, resolve } from 'node:path'
 import md2h5 from 'md2h5'
 
 import * as utils from '../main/utils'
-import { State } from '../main/State'
+import { SubscribingStatus, State } from '../main/State'
 import { type UploadContent, ArticleService } from '../main/services/Article'
 import { AccountService } from '../main/services/Account'
 import { ContractService } from '../main/services/Contract'
@@ -85,14 +85,14 @@ describe('Test article service', () => {
         for (let i = 0; i < 3; ++i) {
             await accountService.addAccount(accounts[i])
             addrs.push(utils.computeAddr(accounts[i]))
-            accountService.switchAccount(addrs[i])
+            await accountService.switchAccount(addrs[i])
             await contractService.clearMessage()
         }
         try {
-            accountService.switchAccount(addrs[0])
+            await accountService.switchAccount(addrs[0])
             await accountService.registerPublisher('AUTHOR 0', 0.05)
         } catch (error) { }
-        accountService.switchAccount(addrs[2])
+        await accountService.switchAccount(addrs[2])
         try {
             accountService.importAsymKeys('./src/test/testasymkeys')
         } catch (error) {
@@ -103,12 +103,12 @@ describe('Test article service', () => {
     }, 120 * 1000)
 
     test('upload free article', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         cid = await articleService.uploadArticle(path1, title1, false)
     }, 120 * 1000)
 
     test('get my article list', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         const list = await articleService.myArticles()
         expect(list.length).toEqual(1)
         expect(list[0].cid).toEqual(cid)
@@ -116,7 +116,7 @@ describe('Test article service', () => {
     }, 120 * 1000)
 
     test('fetch free article', async () => {
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article1.content)
         expect(fetched.images.length).toEqual(article1.images.length)
@@ -125,7 +125,7 @@ describe('Test article service', () => {
     }, 120 * 1000)
 
     test('favourite free article', async () => {
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         await articleService.favouriteArticle(cid, title1)
         const list = state.favouriteList
         expect(list.length).toEqual(1)
@@ -134,25 +134,25 @@ describe('Test article service', () => {
     })
 
     test('unfavourite free article', async () => {
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         await articleService.unfavouriteArticle(cid)
         expect(state.favouriteList.length).toEqual(0)
     })
 
     test('remove free article', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         await articleService.removeArticle(filename1)
         const list = await articleService.myArticles()
         expect(list.length).toEqual(0)
     }, 120 * 1000)
 
     test('upload paid article', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         cid = await articleService.uploadArticle(path2, title2, true)
     }, 120 * 1000)
 
     test('fetch paid article by author', async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article2.content)
         expect(fetched.images.length).toEqual(article2.images.length)
@@ -161,21 +161,20 @@ describe('Test article service', () => {
     }, 120 * 1000)
 
     test('cannot fetch paid article by unsubscribing reader', async () => {
-        accountService.switchAccount(addrs[1])
+        await accountService.switchAccount(addrs[1])
         await expect(articleService.fetchArticle(cid))
             .rejects.toThrow()
     }, 120 * 1000)
 
     test('fetch paid article by subscribing reader', async () => {
-        accountService.switchAccount(addrs[2])
-        const subsTime = await contractService.getSubscribingTime(addrs[0])
-        if (!subsTime) {
+        await accountService.switchAccount(addrs[2])
+        await accountService.updateSubscribing()
+        const status = state.subscribingStatusOf(addrs[0])
+        if (status.status == SubscribingStatus.NO) {
             await accountService.subscribe(addrs[0], 1)
             await new Promise(resolve => setTimeout(resolve, 10 * 1000))
-            accountService.switchAccount(addrs[0])
-            await accountService.handleMessage()
-            accountService.switchAccount(addrs[2])
-            await accountService.handleMessage()
+            await accountService.switchAccount(addrs[0])
+            await accountService.switchAccount(addrs[2])
         }
         const fetched = await articleService.fetchArticle(cid)
         expect(fetched.content).toEqual(article2.content)
@@ -185,7 +184,7 @@ describe('Test article service', () => {
     }, 120 * 1000)
 
     afterAll(async () => {
-        accountService.switchAccount(addrs[0])
+        await accountService.switchAccount(addrs[0])
         await articleService.removeArticle(filename2)
 
         let list: any[] = []

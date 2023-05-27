@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { paths, mainColor } from '@renderer/keys'
-import { formatDate } from '@renderer/components/dateFormatter'
+import { formatDate } from '@renderer/dateFormatter'
 
 const props = defineProps<{
     list: ArticleInfo[]

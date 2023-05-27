@@ -1,3 +1,4 @@
+export { SubscribingStatus } from '@/State'
 export type PublisherInfo = {
     address: string,
     name: string,
@@ -10,7 +11,6 @@ export type ArticleInfo = {
     reqSubscribing: boolean
 }
 export type Article = {
-    info: ArticleInfo,
     content: string,
     images: {
         hash: string,

@@ -67,7 +67,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "authorAddr",
+        "name": "publAddr",
         "type": "address"
       },
       {
@@ -125,7 +125,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "publisher",
+        "name": "publ",
         "type": "address"
       }
     ],
@@ -138,7 +138,8 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
   },
   {
     "inputs": [
@@ -157,7 +158,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "publisher",
+        "name": "publ",
         "type": "address"
       }
     ],
@@ -170,7 +171,8 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
   },
   {
     "inputs": [
@@ -202,7 +204,32 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [],
+    "name": "getSubscribingStatus",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "publ",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "status",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "time",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
   },
   {
     "inputs": [
@@ -225,13 +252,14 @@
     "name": "subscribe",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
+    "type": "function",
+    "payable": true
   },
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "subscriber",
+        "name": "subs",
         "type": "address"
       },
       {
@@ -253,6 +281,26 @@
         "type": "address"
       }
     ],
+    "name": "discardSubscribing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "trimSubscribing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "publ",
+        "type": "address"
+      }
+    ],
     "name": "getSubscribingTime",
     "outputs": [
       {
@@ -262,7 +310,8 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
   },
   {
     "inputs": [
@@ -311,18 +360,18 @@
     "name": "getArticleInfo",
     "outputs": [
       {
-        "internalType": "address",
-        "name": "authorAddr",
-        "type": "address"
-      },
-      {
         "internalType": "string",
         "name": "title",
         "type": "string"
       },
       {
+        "internalType": "address",
+        "name": "publAddr",
+        "type": "address"
+      },
+      {
         "internalType": "string",
-        "name": "author",
+        "name": "publisher",
         "type": "string"
       },
       {
@@ -337,7 +386,8 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
   },
   {
     "inputs": [
@@ -361,6 +411,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
+    "type": "function",
+    "constant": true
   }
 ]

@@ -2,6 +2,10 @@ import { ref } from 'vue'
 import type { Ref } from 'vue'
 import { defineStore } from 'pinia'
 
+export enum SubscribingStatus {
+    NO, REQ, YES
+}
+
 export const useAccountStore = defineStore('account', () => {
     const account: Ref<{
         address: string,
@@ -9,7 +13,7 @@ export const useAccountStore = defineStore('account', () => {
         balance: number,
         isPublisher: boolean,
         price?: number,
-        followings: PublisherInfo[],
+        followings: { info: PublisherInfo, subscribing: SubscribingInfo }[],
     }> = ref({
         address: '',
         balance: 0,

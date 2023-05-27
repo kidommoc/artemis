@@ -38,8 +38,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -47,23 +46,22 @@
     "outputs": [
       {
         "internalType": "address[]",
-        "name": "msgSenders",
+        "name": "senders",
         "type": "address[]"
       },
       {
         "internalType": "uint8[]",
-        "name": "msgCodes",
+        "name": "codes",
         "type": "uint8[]"
       },
       {
         "internalType": "string[]",
-        "name": "msgContents",
+        "name": "contents",
         "type": "string[]"
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],

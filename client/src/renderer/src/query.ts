@@ -34,7 +34,7 @@ function toArticleInfos(data: any): ArticleInfo[] {
         result.push({
             ipfsAddress: ele.id.toString(),
             title: ele.title,
-            publisher: toPublisherInfos([ele.author])[0],
+            publisher: toPublisherInfos([ele.publisher])[0],
             date: new Date(Number(ele.date) * 1000),
             reqSubscribing: ele.reqSubscribing,
         })
@@ -52,7 +52,7 @@ export async function querySearchTitle(keywords: string)
                 titleSearch(text: $text) {
                     id,
                     title,
-                    author {
+                    publisher {
                         id,
                         name
                     },
@@ -77,7 +77,7 @@ export async function querySearchPublisher(keywords: string)
     const text = keywords.split(' ').join(' & ')
     const result = await client?.query(gql`
             query SearchPublisher($text: String!) {
-                authorSearch(text: $text) {
+                publisherSearch(text: $text) {
                     id,
                     name
                 }
@@ -86,7 +86,7 @@ export async function querySearchPublisher(keywords: string)
         { text: text },
     )
     if (result?.data)
-        return toPublisherInfos(result.data.authorSearch)
+        return toPublisherInfos(result.data.publisherSearch)
     else
         throw new Error('Fetch Error!')
 }
@@ -99,11 +99,11 @@ export async function queryFetchPublisher(publisherAddress: string)
     const result = await client?.query(gql`
             query FetchPublisher($id: Bytes!) {
                 artemisArticles(orderBy: date, orderDirection: desc,
-                    where: { author_: { id: $id }}
+                    where: { publisher_: { id: $id }}
                 ) {
                     id,
                     title,
-                    author {
+                    publisher {
                         id, name
                     },
                     date,
@@ -122,13 +122,13 @@ export async function queryFetchPublisher(publisherAddress: string)
 export async function queryFetchUpdates(followingList: PublisherInfo[])
     : Promise<{ from: Date, to: Date, infos: ArticleInfo[]}>
 {
-    const from = await window.api.account.getLastUpdates()
+    const from = await window.api.account.getLastUpdated()
     const to = new Date()
     const endTime = Math.floor(to.getTime() / 1000)
     const startTime = Math.floor(from.getTime() / 1000)
     const publishers: any[] = []
     for (const ele of followingList)
-        publishers.push({ author_: { id: ele.address.toLowerCase() }})
+        publishers.push({ publisher_: { id: ele.address.toLowerCase() }})
     const publishersStr = JSON.stringify(publishers).replace(/"([^"]+)":/g, '$1:')
     const result = await client?.query(gql`
         query FetchUpdate($start: BigInt!, $end: BigInt!) {
@@ -141,7 +141,7 @@ export async function queryFetchUpdates(followingList: PublisherInfo[])
             ) {
                 id,
                 title,
-                author {
+                publisher {
                     id, name
                 },
                 date,

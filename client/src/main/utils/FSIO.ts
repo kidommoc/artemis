@@ -6,14 +6,20 @@ import { resolve } from 'node:path'
  */
 export class FSIO {
     public static read(path: string): string {
-        return fs.readFileSync(resolve(path), 'utf-8')
+        const fullpath = resolve(path)
+        console.log(`read from ${fullpath}`)
+        return fs.readFileSync(fullpath, 'utf-8')
     }
 
     public static readRaw(path: string): Buffer {
-        return fs.readFileSync(resolve(path))
+        const fullpath = resolve(path)
+        console.log(`read from ${fullpath}`)
+        return fs.readFileSync(fullpath)
     }
 
     public static write(path: string, content: string | Buffer) {
-        fs.writeFileSync(resolve(path), content, { encoding: 'utf-8' })
+        const fullpath = resolve(path)
+        console.log(`write to ${fullpath}`)
+        fs.writeFileSync(fullpath, content, { encoding: 'utf-8' })
     }
 }

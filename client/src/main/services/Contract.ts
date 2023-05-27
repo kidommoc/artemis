@@ -77,19 +77,20 @@ export class ContractService {
         : Promise<{ from: string, code: MsgCode, content: string }[]>
     {
         const result = await this._message!.fetchMessage()
-        if (Array.isArray(result.msgSenders)
-            || Array.isArray(result.msgCodes)
-            || Array.isArray(result.msgContents)
-            || result.msgSenders.length != result.msgCodes.length
-            || result.msgSenders.length != result.msgContents.length
-        ) {
-            // throw error
-        }
+        if (!Array.isArray(result.senders)
+            || !Array.isArray(result.codes)
+            || !Array.isArray(result.contents)
+        )
+            throw new Error('Error message syntax!')
+        if (result.senders.length != result.codes.length
+            || result.senders.length != result.contents.length
+        )
+            throw new Error('Error message syntax!')
         const msgs: { from: string, code: MsgCode, content: string }[] = []
-        for (let i = 0; i < result.msgSenders!.length; ++i) {
+        for (let i = 0; i < result.senders!.length; ++i) {
             const msg = {
-                from: result.msgSenders![i],
-                content: result.msgContents![i],
+                from: result.senders![i],
+                content: result.contents![i],
                 code: ((c: number): MsgCode => {
                     switch (c) {
                         case 1:
@@ -99,7 +100,7 @@ export class ContractService {
                         default:
                             return MsgCode.UNKNOWN
                     }
-                })(result.msgCodes![i]),
+                })(result.codes![i]),
             }
             msgs.push(msg)
         }
@@ -181,6 +182,34 @@ export class ContractService {
         return Number(ethers.utils.formatEther(result))
     }
 
+    public async getSubscribingStatus(): Promise<{ addr: string, status: number, time?: Date}[]> {
+        const result = await this._artemis!.getSubscribingStatus()
+        if (!Array.isArray(result.publ)
+            || !Array.isArray(result.status)
+            || !Array.isArray(result.time)
+        )
+            throw new Error('Error subscribing status syntax!')
+        if (result.publ.length != result.status.length
+            || result.publ.length != result.time.length
+        )
+            throw new Error('Error subscribing status syntax!')
+        const list: { addr: string, status: number, time?: Date }[] = []
+        for (let i = 0; i < result.publ.length; ++i)
+            list.push({
+                addr: result.publ[i],
+                status: result.status[i],
+                time: result.status[i] === 2 ?
+                    new Date(result.time[i] * 1000) : undefined
+            })
+        return list
+    }
+
+    public async trimSubscribing(): Promise<string> {
+        const tx = await this._artemis!.trimSubscribing()
+        await tx.wait()
+        return tx.hash
+    }
+
     public async subscribe(publ: string, months: number): Promise<string> {
         const balance = await this.getBalance()
         const price = await this.getSubscribingPrice(publ)
@@ -198,12 +227,10 @@ export class ContractService {
         return tx.hash
     }
 
-    public async getSubscribingTime(publ: string): Promise<Date | undefined> {
-        const result = await this._artemis!.getSubscribingTime(publ)
-        if (result == 0)
-            return undefined
-        // check
-        return new Date(Number(result * 1000))
+    public async discardSubscribing(publ: string): Promise<string> {
+        const tx = this._artemis!.discardSubscribing(publ)
+        await tx.wait()
+        return tx.hash
     }
 
     public async getArticleInfo(fileLoc: string):
@@ -213,8 +240,8 @@ export class ContractService {
         // check
         return {
             title: result.title,
-            publisher: result.author,
-            publisherAddr: result.authorAddr,
+            publisher: result.publisher,
+            publisherAddr: result.publAddr,
             date: new Date(result.date * 1000),
             reqSubscribing: result.reqSubscribing,
         }

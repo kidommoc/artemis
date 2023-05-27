@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 import { mainColor } from '@renderer/keys'
 import { useAccountStore } from '@renderer/store/account'
 import { useUpdatesStore } from '@renderer/store/updates'
-import { formatDateTime } from '@renderer/components/dateFormatter'
-import { queryFetchUpdates } from '@renderer/components/query'
+import { formatDateTime } from '@renderer/dateFormatter'
+import { queryFetchUpdates } from '@renderer/query'
 import MayLoad from '@renderer/components/MayLoad.vue'
 import ArticleList from '@renderer/components/ArticleList.vue'
 
@@ -17,11 +17,13 @@ const updatesData = computed(() => updates.data.get(account.data.address))
 
 async function loadUpdates() {
     await account.update()
-    console.log(account.data.followings.length)
     if (noFollowings.value)
         return
     // get result from query
-    const result = await queryFetchUpdates(account.data.followings)
+    const list: PublisherInfo[] = []
+    for (const ele of account.data.followings)
+        list.push(ele.info)
+    const result = await queryFetchUpdates(list)
     updates.update(address.value, result.from, result.to, result.infos)
 }
 </script>
