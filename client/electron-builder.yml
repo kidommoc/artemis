@@ -1,0 +1,42 @@
+appId: com.kidommoc.artemis
+productName: artemis
+directories:
+  buildResources: build
+files:
+  - 'out/**/*'
+  - 'node_modules/ipfs-*/**/*'
+  - '!**/.vscode/*'
+  - '!src/**/*'
+  - '!test_files/**/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,tsconfig.node.template.json,tsconfig.web.template.json}'
+  - '!jest.config.ts'
+  - '!{generateTSConfig.js,playground.ts}'
+asarUnpack:
+  - resources/*
+win:
+  executableName: artemis
+nsis:
+  artifactName: artemis-1.0.0-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+mac:
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+dmg:
+  artifactName: artemis-1.0.0.${ext}
+linux:
+  target:
+    - AppImage
+    - snap
+    - deb
+appImage:
+  artifactName: artemis-1.0.0.${ext}
+npmRebuild: false

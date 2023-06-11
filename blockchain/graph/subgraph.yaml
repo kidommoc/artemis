@@ -1,0 +1,35 @@
+specVersion: 0.0.4
+description: Artemis for Ethereum
+repository: https://github.com/kidommoc/artemis
+schema:
+  file: ./schema.graphql
+features:
+  - fullTextSearch
+dataSources:
+  - kind: ethereum/contract
+    name: Artemis
+    network: mainnet
+    source:
+      # local contract addr
+      address: '<your contract address>'
+      abi: Artemis
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - ArtemisArticle
+      abis:
+        - name: Artemis
+          file: ../abi/Artemis.json
+      eventHandlers:
+        - event: RegisterPublisherEvent(address,string)
+          handler: handleRegisterPublisher
+        - event: RenamePublisherEvent(address,string)
+          handler: handleRenamePublisher
+        - event: UploadArticleEvent(address,string,string,bool,uint256)
+          handler: handleUploadArticle
+        - event: RemoveArticleEvent(string)
+          handler: handleRemoveArticle
+      file: ./mapping.ts

@@ -1,0 +1,37 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": [
+    "src/renderer/src/env.d.ts",
+    "src/renderer/src/**/*",
+    "src/renderer/src/**/*.vue",
+    "src/preload/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules/",
+    "dist",
+    "out"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "target": "es6",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@renderer/*": ["src/renderer/src/*"]
+    },
+    "typeRoots": [
+        "./node_modules/@types",
+        "./src/types"
+    ],
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "newLine": "lf",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "include": [
+    "electron.vite.config.*",
+    "src/main/**/*",
+    "src/main/**/*.json",
+    "src/preload/**/*"
+  ],
+  "exclude": [
+    "node_modules/",
+    "dist/",
+    "out/"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "target": "ESNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
+    "baseUrl": ".",
+    "paths": {
+        "@/*": ["./src/main/*"]
+    },
+    "typeRoots": [
+        "./node_modules/@types",
+        "./src/types"
+    ],
+    "types": [
+      "electron-vite/node",
+      "vite/client",
+      "jest",
+      "@types/jest"
+    ],
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "noEmit": false,
+    "newLine": "lf",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}

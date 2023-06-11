@@ -1,0 +1,25 @@
+{
+  "name": "artemis-blockchain",
+  "version": "0.2.0",
+  "description": "The Graph subgraph supporting Artemis.",
+  "main": "none",
+  "scripts": {
+    "generate-data": "node generateTestData",
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "create-local": "graph create kidommoc/artemis --node http://127.0.0.1:8020",
+    "deploy-local": "graph deploy kidommoc/artemis --version-label=v0.1.0 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001",
+    "watch-local": "graph deploy kidommoc/artemis --watch --version-label=v0.1.0 --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001",
+    "build-deploy": "npm run codegen && npm run create-local && npm run deploy-local"
+  },
+  "author": "kidommoc",
+  "homepage": "https://github.com/kidommoc/artemis#readme",
+  "license": "MIT",
+  "dependencies": {
+    "@graphprotocol/graph-ts": "^0.29.3"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.46.1",
+    "ethers": "^5.7.2"
+  }
+}

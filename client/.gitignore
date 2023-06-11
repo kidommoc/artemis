@@ -1,0 +1,8 @@
+.vscode/
+node_modules/
+dist/
+out/
+
+*.log*
+.eslint*
+package-lock.json

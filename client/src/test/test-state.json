@@ -1,0 +1,6 @@
+{
+    "EthereumUrl": "http://127.0.0.1:7545",
+    "ContractArtemis": "<your test artemis contract address>",
+    "ContractMessage": "<your test message contract address>",
+    "GraphQLUrl": "http://127.0.0.1:8000/subgraphs/name/kidommoc/artemis"
+}

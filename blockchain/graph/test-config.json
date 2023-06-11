@@ -1,0 +1,9 @@
+{
+    "EthereumUrl": "http://127.0.0.1:7545",
+    "ContractAddr": "<your contract address>",
+    "Accounts": [
+        "<your local test account private key>",
+        "<your local test account private key>",
+        "<your local test account private key>"
+    ]
+}

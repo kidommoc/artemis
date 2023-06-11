@@ -1,0 +1,34 @@
+type _Schema_
+    @fulltext(
+        name: "titleSearch"
+        language: en
+        algorithm: rank
+        include: [{
+            entity: "ArtemisArticle",
+            fields: [{ name: "title" }]
+        }]
+    ),
+    @fulltext(
+        name: "publisherSearch"
+        language: en
+        algorithm: rank
+        include: [{
+            entity: "ArtemisPublisher",
+            fields: [{ name: "name" }]
+        }]
+    )
+
+type ArtemisPublisher @entity {
+    "id = ethereum address of publisher"
+    id: Bytes!
+    name: String!
+}
+
+type ArtemisArticle @entity {
+    "id = article ipfs address in base58"
+    id: String!
+    title: String!
+    publisher: ArtemisPublisher!
+    date: BigInt!
+    reqSubscribing: Boolean!
+}
